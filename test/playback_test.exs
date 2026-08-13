@@ -137,6 +137,12 @@ defmodule SpectreLab.PlaybackTest do
 
       assert {:error, :unknown_lab_loader_options} =
                Lab.load(bundle, telemetry_handler: fn _, _, _ -> :ok end)
+
+      assert {:error, :invalid_lab_loader_options} = Lab.load(bundle, :invalid)
+      assert {:error, :invalid_lab_loader_options} = Lab.load(bundle, [:not_a_keyword])
+
+      assert {:error, :duplicate_lab_loader_options} =
+               Lab.load(bundle, max_bytes: 1_024, max_bytes: 2_048)
     after
       :erlang.trace(self(), false, [:call])
       :erlang.trace_pattern(target, false, [:local])
