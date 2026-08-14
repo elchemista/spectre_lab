@@ -1,0 +1,14 @@
+defmodule <%= @module %> do
+  use Spectre.Lab.TestCase, async: true
+
+  alias Spectre.Lab.IOFuse
+
+  test "keeps live I/O blocked during offline assertions", %{io_fuse: io_fuse} do
+    assert %{state: :closed} = IOFuse.snapshot(io_fuse)
+
+    assert {:error, :live_io_blocked} =
+             assert_no_live_io(io_fuse, fn ->
+               IOFuse.dispatch(io_fuse, fn -> raise "unexpected live I/O" end)
+             end)
+  end
+end
