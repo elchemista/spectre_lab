@@ -93,6 +93,40 @@ Each case receives an unregistered, caller-supervised sandbox and a closed
 `IOFuse.dispatch/2`; it is not a universal network, file, process, or adapter
 interceptor.
 
+## Virtual streaming inference
+
+Exercise the real Spectre 0.3.2 streaming runtime without opening a provider
+connection:
+
+```elixir
+script =
+  Spectre.Lab.Inference.StreamScript.text!("hello from the fixture",
+    chunk_size: 4
+  )
+
+{:ok, stream} =
+  Spectre.stream(instance, "stream this",
+    model: MyApp.TestModel,
+    plan_actions?: false,
+    stream_adapter: Spectre.Lab.Inference.StreamAdapter,
+    stream_adapter_opts: [script: script, observer: self()]
+  )
+
+events = Enum.to_list(stream)
+```
+
+The adapter is lazy and pull-driven: one consumer demand schedules at most one
+scripted transport item in the real session mailbox. Scripts may contain
+provider-event batches, `:stall`, or `{:transport_error, reason}` and can split
+UTF-8 codepoints exactly like network chunks. Early Enumerable termination
+goes through the normal provider cancellation path. The test model is still
+needed for immutable selection identity, but its synchronous `complete/2`
+callback is never used.
+
+This is deterministic fixture delivery, not deterministic replay of a prior
+model call. Restart support resumes only from the explicit
+`{:spectre_lab, consumed_items}` cursor stamped on delivered fixture batches.
+
 Generate a safe starter test with:
 
 ```console

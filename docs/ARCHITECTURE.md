@@ -73,6 +73,13 @@ zero-arity function passed to `Spectre.Lab.IOFuse.dispatch/2` is gated and
 counted. Closing the fuse after a dispatch was authorized does not revoke work
 already running.
 
+`Spectre.Lab.Inference.StreamAdapter` is a pull adapter at the public core
+streaming boundary. Its immutable script remains caller-owned, and every
+credit schedules at most one tagged message in the owning session mailbox.
+The core still owns the Enumerable, buffering, fencing, sanitization, usage
+settlement, cancellation, restart, and terminal Result. Lab's cursor counts
+delivered fixture items; it does not claim to be a provider replay cursor.
+
 `Spectre.Lab.Fault.CheckpointStore` is an adapter at the existing
 `Spectre.Instance.CheckpointStore` behaviour. Its unregistered controller
 serializes FIFO actions for `load`, `compare_and_swap`, and

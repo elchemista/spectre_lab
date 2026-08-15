@@ -41,6 +41,9 @@ application's compiled BEAM surface.
 - `Spectre.Lab.Fault.ReceiptSink`
 - `Spectre.Lab.IOFuse`
   - functions: `start_link/0`, `start_link/1`, `open/1`, `close/1`, `snapshot/1`, `dispatch/2`
+- `Spectre.Lab.Inference.StreamAdapter`
+- `Spectre.Lab.Inference.StreamScript`
+  - functions: `new/1`, `new!/1`, `text/1`, `text/2`, `text!/1`, `text!/2`, `conformance_messages/2`
 - `Spectre.Lab.Loader`
   - functions: `load/1`, `load/2`
   - options: Bundle resource limits only (`max_bytes`, `max_entries`,
@@ -72,3 +75,8 @@ The I/O fuse gates only calls explicitly routed through `dispatch/2`; it is not
 a universal side-effect interceptor. Fault adapters wrap only Spectre's
 existing checkpoint-store and receipt-sink behaviours. Lab has no PostgreSQL
 runtime and does not open a Ledger backend or Ecto Repo.
+
+The virtual stream adapter implements the existing core adapter behaviour and
+delivers finite caller-owned fixtures through the real session mailbox. It
+does not call a model, emulate a provider transport beyond the declared
+script, or turn fixture delivery into a deterministic replay claim.

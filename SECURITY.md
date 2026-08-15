@@ -46,6 +46,12 @@ Sandboxes and controllers are caller-owned and unregistered. Hosts remain
 responsible for supervision, process authorization, and cleanup of any resource
 started outside a Lab sandbox.
 
+Virtual stream scripts reside in the caller and Spectre session processes for
+the duration of a test. Do not put production prompts, credentials, provider
+metadata, or customer responses in fixtures. Optional observer messages never
+contain response deltas and reduce cancellation reasons to a stable class, but
+the public Stream events intentionally contain the scripted response text.
+
 ## Diagnostics and dependencies
 
 Lab Doctor is read-only and does not open a Ledger backend. Mix tasks read only

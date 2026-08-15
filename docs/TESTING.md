@@ -41,6 +41,27 @@ adapter call being tested, or inject an adapter that does so. The
 its function runs; it is not a proof about unrelated or later asynchronous
 work.
 
+## Stream through the real runtime without a provider
+
+Build a `Spectre.Lab.Inference.StreamScript` and select
+`Spectre.Lab.Inference.StreamAdapter` in the ordinary `Spectre.stream/3`
+options. `text!/2` creates globally sequenced `:started`, `:delta`, `:usage`,
+and `:completed` events with cumulative usage. For protocol failures, use
+`new!/1` with explicit `ProviderEvent` batches, `:stall`, or
+`{:transport_error, reason}`.
+
+Each batch is one transport item and requires one consumer-driven credit.
+Delta binaries may split UTF-8 codepoints; Spectre performs the same bounded
+reassembly and sanitizer work used for a real adapter. Pass `observer: self()`
+to receive text-free opened, demand, and cancellation facts. Cancellation
+reasons are reduced to a class before notification.
+
+The script is a deterministic source, not evidence that an earlier provider
+execution can be replayed. The adapter never calls `LLM.complete/2`, never
+opens a socket, and implements Spectre's bound-fixture conformance callback.
+Use `StreamScript.conformance_messages/2` with `delivery: :external` to run the
+public `Spectre.Inference.StreamAdapter.Conformance` suite.
+
 ## Script checkpoint-store failures
 
 Create a caller-owned `Spectre.Lab.Fault.Controller` and configure

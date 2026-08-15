@@ -16,6 +16,9 @@ Initial release for Spectre 0.3.2 and Spectre Ledger 0.1.x.
   every-revision or deterministic-replay claims;
 - identity-only diff reports for verified playbacks of the same stream;
 - caller-owned sandboxes and a fail-closed, explicitly routed I/O fuse;
+- a pull-driven virtual inference adapter with finite scripts, cumulative
+  usage, UTF-8 fragment support, cancellation, resume cursors, and core
+  conformance fixtures;
 - an ExUnit case template and safe test generator;
 - deterministic fault scripts around Spectre's public checkpoint-store
   behaviour, including ambiguous committed-write simulation;
