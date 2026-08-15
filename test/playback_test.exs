@@ -157,6 +157,8 @@ defmodule SpectreLab.PlaybackTest do
     assert {:ok, package} = Installable.verify(Lab)
     assert package.requires == [{:package, :spectre_ledger, "~> 0.1.0"}]
     assert package.metadata.capability == :checkpoint_playback
+    assert package.metadata.receipt_capability == :boundary_receipt_playback
+    refute package.metadata.receipt_bundle
     refute package.metadata.every_revision
     refute package.metadata.deterministic_replay
   end

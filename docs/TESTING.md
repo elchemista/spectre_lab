@@ -105,6 +105,17 @@ Treat Bundle v1 files as trusted/local test artifacts. Do not load arbitrary
 downloads in the application test node because Spectre Foundation decoding may
 load an existing module named by checkpoint data.
 
+For receipt assertions, capture a complete `receipt_entries/2` and `receipts/2`
+pair from Ledger and pass both to `Spectre.Lab.load_receipts/2`. Query the
+result with `ReceiptPlayback.fetch/2`, `by_kind/2`, or `for_run/2`. Frames stay
+in physical append order even when observational delivery makes canonical
+revisions non-monotonic. Always inspect `ReceiptPlayback.completeness/1` before
+making state-linkage or replay claims.
+
+Ledger Bundle v1 contains checkpoints only. Do not serialize a receipt
+playback as if Lab had defined another stable wire format; no such format is
+part of Lab 0.1.0.
+
 ## Project gates
 
 The release suite can run against adjacent Spectre and Ledger 0.3.2 / 0.1.x

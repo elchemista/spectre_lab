@@ -27,7 +27,7 @@ application's compiled BEAM surface.
 - `Mix.Tasks.SpectreLab.Doctor`
 - `Mix.Tasks.SpectreLab.Gen.Test`
 - `Spectre.Lab`
-  - functions: `version/0`, `load/1`, `load/2`, `diff/2`
+  - functions: `version/0`, `load/1`, `load/2`, `load_receipts/2`, `diff/2`
 - `Spectre.Lab.Diff`
   - functions: `compare/2`
 - `Spectre.Lab.Diff.Report`
@@ -52,6 +52,11 @@ application's compiled BEAM surface.
 - `Spectre.Lab.Playback`
   - functions: `revisions/1`, `head/1`, `fetch/2`, `checkpoint/2`, `completeness/1`
 - `Spectre.Lab.Playback.Frame`
+- `Spectre.Lab.ReceiptLoader`
+  - functions: `load/2`
+- `Spectre.Lab.ReceiptPlayback`
+  - functions: `sequences/1`, `receipts/1`, `head/1`, `fetch/2`, `by_kind/2`, `for_run/2`, `completeness/1`
+- `Spectre.Lab.ReceiptPlayback.Frame`
 - `Spectre.Lab.Sandbox`
   - functions: `start_link/0`, `start_link/1`, `start_child/2`, `terminate_child/2`, `children/1`
 - `Spectre.Lab.TestCase`
@@ -64,6 +69,12 @@ Lab loads only verified persisted checkpoints from Ledger Bundle v1. Its public
 contract does not claim every runtime revision, deterministic execution replay,
 restoration of executable Runs, reproduction of side effects, or semantic
 inspection of Instance internals.
+
+Receipt playback accepts only a complete in-memory Ledger chain plus paired
+core envelopes. It re-verifies physical linkage and content addressing, but
+defines no receipt bundle or backend snapshot protocol. Receipt frames retain
+confidential payloads and preserve append order without implying canonical
+ordering or exactly-once effects.
 
 Bundle loading is for trusted/local artifacts because the public Spectre
 Foundation decoder may load existing modules named in a valid checkpoint. Lab

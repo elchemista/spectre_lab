@@ -16,10 +16,13 @@ defmodule SpectreLab.PackageContractTest do
     assert package.resources == []
 
     assert {:contract, {:spectre_lab, :checkpoint_playback, 1}} in package.provides
+    assert {:contract, {:spectre_lab, :boundary_receipt_playback, 1}} in package.provides
     assert {:service, {:spectre_lab, :test_harness, 1}} in package.provides
 
     assert package.metadata == %{
              capability: :checkpoint_playback,
+             receipt_capability: :boundary_receipt_playback,
+             receipt_bundle: false,
              bundle_contract: 1,
              every_revision: false,
              deterministic_replay: false,

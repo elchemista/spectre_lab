@@ -28,6 +28,12 @@ Bundle v1 verification is bounded and detects malformed envelopes, broken
 entry chains, missing or extra objects, and digest mismatches. Those resource
 and integrity checks do not change the trusted-artifact rule.
 
+Receipt playbacks retain complete `Spectre.Receipt.Envelope` values, including
+ordinary admitted input or model output that constitutional redaction does not
+remove. They have no stable Lab serialization format and are not automatically
+encrypted. Keep them in the same access-control, retention, and deletion
+boundary as the Ledger backend, and capture only complete unpaginated chains.
+
 ## Test boundaries
 
 `Spectre.Lab.IOFuse` is fail-closed only for functions explicitly passed to

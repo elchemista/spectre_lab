@@ -73,6 +73,32 @@ The completeness map reports persisted revisions and gaps explicitly. A gap is
 not inferred execution history; it only says that intermediate revisions are
 absent from the persisted checkpoint chain.
 
+## Boundary receipt playback
+
+Ledger 0.1.0 keeps receipt entries and envelope objects outside Bundle v1.
+Fetch a complete chain through Ledger, then detach it into an offline Lab
+playback:
+
+```elixir
+{:ok, entries} = Spectre.Ledger.receipt_entries(instance_ref, ledger_opts)
+{:ok, envelopes} = Spectre.Ledger.receipts(instance_ref, ledger_opts)
+
+{:ok, receipts} = Spectre.Lab.load_receipts(entries, envelopes)
+[1, 2, 3] = Spectre.Lab.ReceiptPlayback.sequences(receipts)
+terminal = Spectre.Lab.ReceiptPlayback.by_kind(receipts, :inference_attempt_terminal)
+```
+
+Loading performs no backend access. Lab re-verifies the complete physical
+entry chain and every entry/envelope binding, hashes the stream key in its
+verification report, and preserves physical append order. Its completeness
+map reports separately whether canonical revisions were ordered and whether
+state digests were present. It never claims every revision, deterministic
+replay, or exactly-once external effects.
+
+Lab deliberately does not define a receipt bundle format. Until Ledger owns
+one, callers must protect the in-memory entries and confidential envelopes and
+must not treat two independently paginated queries as a complete chain.
+
 ## ExUnit test case
 
 ```elixir

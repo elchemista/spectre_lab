@@ -15,6 +15,9 @@ defmodule Spectre.Lab.Doctor do
   alias Spectre.Lab.Playback
   alias Spectre.Ledger
   alias Spectre.Ledger.Bundle
+  alias Spectre.Ledger.ReceiptChain
+  alias Spectre.Ledger.ReceiptEntry
+  alias Spectre.Receipt.Envelope
   alias Spectre.Stack.Conformance, as: StackConformance
   alias Spectre.Stack.Installable
 
@@ -36,6 +39,7 @@ defmodule Spectre.Lab.Doctor do
         safe("lab.versions", &versions_check/0),
         safe("lab.stack", &stack_check/0),
         safe("lab.bundle_contract", &bundle_contract_check/0),
+        safe("lab.receipt_contract", &receipt_contract_check/0),
         safe("lab.bundle_artifact", fn -> bundle_check(Keyword.get(opts, :bundle)) end)
       ]
 
@@ -145,6 +149,28 @@ defmodule Spectre.Lab.Doctor do
       })
     else
       check(:error, "lab.bundle_contract", :ledger_bundle_contract_invalid)
+    end
+  end
+
+  defp receipt_contract_check do
+    required_provides = [
+      {:contract, {:spectre, :receipt_sink, 1}},
+      {:service, {:spectre_ledger, :boundary_receipt_archive, 1}}
+    ]
+
+    with 1 <- ReceiptEntry.version(),
+         {:ok, %{entry_count: 0, head_sequence: 0}} <- ReceiptChain.verify([]),
+         {:ok, package} <- Installable.verify(Ledger),
+         true <- Enum.all?(required_provides, &(&1 in package.provides)),
+         true <- :inference_attempt_terminal in Envelope.kinds() do
+      check(:ok, "lab.receipt_contract", :ledger_receipt_contract_valid, %{
+        receipt_entry_version: ReceiptEntry.version(),
+        capture: "nondeterministic_boundaries",
+        physical_order: "verified",
+        deterministic_replay: false
+      })
+    else
+      _invalid -> check(:error, "lab.receipt_contract", :ledger_receipt_contract_invalid)
     end
   end
 

@@ -12,6 +12,8 @@ Initial release for Spectre 0.3.2 and Spectre Ledger 0.1.x.
 - offline bundle loading that suppresses custom and global Ledger telemetry and
   accepts only closed Bundle resource-limit options;
 - immutable playback frames containing opaque persisted-checkpoint bytes;
+- offline receipt-chain playback with physical-order verification, paired
+  envelope content checks, state-linkage completeness, and kind/Run queries;
 - explicit persisted-revision and revision-gap completeness metadata, without
   every-revision or deterministic-replay claims;
 - identity-only diff reports for verified playbacks of the same stream;

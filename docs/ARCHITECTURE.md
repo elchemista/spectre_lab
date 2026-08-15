@@ -41,6 +41,21 @@ named by encoded data. Consequently Bundle v1 remains a trusted/local artifact
 boundary for Lab 0.1.x even though Ledger applies resource limits and verifies
 content integrity.
 
+## Receipt playback pipeline
+
+`Spectre.Lab.load_receipts/2` accepts a complete list of Ledger receipt-chain
+entries paired with their validated core envelopes. Ledger's public
+`ReceiptChain` verifies physical sequence, linkage, entry identity, and stream
+consistency. Lab then verifies each entry/envelope content address and builds
+immutable frames without querying the backend.
+
+Receipt Bundle v1 does not exist: checkpoint Bundle v1 intentionally excludes
+the receipt chain. Lab therefore owns no receipt decoder, exporter, or storage
+format. Hosts obtain complete lists through Ledger and retain responsibility
+for consistency while capturing them. The resulting playback preserves
+physical append order and reports canonical ordering as a separate boolean;
+observational receipt delivery may legitimately make it false.
+
 ## Playback semantics
 
 A playback is a finite view of the complete checkpoint chain included in one

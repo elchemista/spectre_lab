@@ -44,6 +44,9 @@ defmodule SpectreLab.DoctorTest do
 
       assert %{status: :ok, code: :lab_stack_compatible} = check(report, "lab.stack")
 
+      assert %{status: :ok, code: :ledger_receipt_contract_valid} =
+               check(report, "lab.receipt_contract")
+
       assert %{status: :ok, code: :lab_bundle_verified, details: details} =
                check(report, "lab.bundle_artifact")
 

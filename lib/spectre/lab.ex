@@ -14,12 +14,15 @@ defmodule Spectre.Lab do
     requires: [{:package, :spectre_ledger, "~> 0.1.0"}],
     provides: [
       {:contract, {:spectre_lab, :checkpoint_playback, 1}},
+      {:contract, {:spectre_lab, :boundary_receipt_playback, 1}},
       {:service, {:spectre_lab, :test_harness, 1}}
     ],
     metadata: %{
       lab_contract: 1,
       bundle_contract: 1,
       capability: :checkpoint_playback,
+      receipt_capability: :boundary_receipt_playback,
+      receipt_bundle: false,
       every_revision: false,
       deterministic_replay: false,
       live_io_default: :blocked
@@ -28,7 +31,11 @@ defmodule Spectre.Lab do
   alias Spectre.Lab.Diff
   alias Spectre.Lab.Loader
   alias Spectre.Lab.Playback
+  alias Spectre.Lab.ReceiptLoader
+  alias Spectre.Lab.ReceiptPlayback
   alias Spectre.Ledger.Bundle
+  alias Spectre.Ledger.ReceiptEntry
+  alias Spectre.Receipt.Envelope
 
   @version "0.1.0"
 
@@ -45,6 +52,11 @@ defmodule Spectre.Lab do
   """
   @spec load(binary() | Bundle.t(), keyword()) :: {:ok, Playback.t()} | {:error, term()}
   defdelegate load(bundle, opts \\ []), to: Loader
+
+  @doc "Builds an offline playback from one complete verified receipt chain."
+  @spec load_receipts([ReceiptEntry.t()], [Envelope.t()]) ::
+          {:ok, ReceiptPlayback.t()} | {:error, term()}
+  defdelegate load_receipts(entries, envelopes), to: ReceiptLoader, as: :load
 
   @doc "Compares two verified checkpoint timelines."
   @spec diff(Playback.t(), Playback.t()) :: {:ok, Diff.Report.t()} | {:error, term()}
