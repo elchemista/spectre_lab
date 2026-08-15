@@ -4,6 +4,8 @@ defmodule Spectre.Lab.TestCase do
 
   Every test receives a caller-supervised `:sandbox` and a closed `:io_fuse`.
   Processes started with `start_lab_child/2` are shut down with the test.
+  `start_fault_controller/2` starts a deterministic checkpoint/receipt fault
+  script in that same sandbox.
   `assert_no_live_io/2` proves that a synchronous block authorized no live I/O;
   blocked attempts are permitted because their thunk never ran.
   """
@@ -11,12 +13,18 @@ defmodule Spectre.Lab.TestCase do
   use ExUnit.CaseTemplate
 
   alias Spectre.Lab.IOFuse
+  alias Spectre.Lab.Fault.Controller
   alias Spectre.Lab.Sandbox
 
   using do
     quote do
       import Spectre.Lab.TestCase,
-        only: [assert_no_live_io: 2, start_lab_child: 2]
+        only: [
+          assert_no_live_io: 2,
+          start_fault_controller: 1,
+          start_fault_controller: 2,
+          start_lab_child: 2
+        ]
     end
   end
 
@@ -35,6 +43,12 @@ defmodule Spectre.Lab.TestCase do
   end
 
   def start_lab_child(_context, _child_spec), do: {:error, :invalid_lab_test_context}
+
+  @doc "Starts a validated persistence-fault script inside the case sandbox."
+  @spec start_fault_controller(map(), Controller.script()) :: GenServer.on_start()
+  def start_fault_controller(context, script \\ %{}) do
+    start_lab_child(context, {Controller, script: script})
+  end
 
   @doc """
   Runs `thunk` and asserts that no live I/O dispatch was authorized.

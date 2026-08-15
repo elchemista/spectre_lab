@@ -81,9 +81,25 @@ defmodule SpectreLabFaultCheckpointStoreTest do
     assert {:ok, "checkpoint-1"} = CheckpointStore.load(store, ref, trace: :portable)
 
     assert Controller.snapshot(controller) == %{
-             calls: %{load: 1, compare_and_swap: 1, migrate_instance_key: 0},
+             calls: %{
+               load: 1,
+               compare_and_swap: 1,
+               migrate_instance_key: 0,
+               receipt_append: 0,
+               receipt_lookup: 0,
+               receipt_put_payload: 0,
+               receipt_get_payload: 0
+             },
              actions: %{pass: 2, fail_before: 0, commit_then_return: 0},
-             remaining: %{load: 0, compare_and_swap: 0, migrate_instance_key: 0}
+             remaining: %{
+               load: 0,
+               compare_and_swap: 0,
+               migrate_instance_key: 0,
+               receipt_append: 0,
+               receipt_lookup: 0,
+               receipt_put_payload: 0,
+               receipt_get_payload: 0
+             }
            }
   end
 

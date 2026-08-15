@@ -129,6 +129,21 @@ store =
 The adapter preserves Spectre's existing checkpoint-store normalization and
 ambiguity semantics; it does not invent a second persistence contract.
 
+The same controller can inject failures at the Spectre 0.3.2 receipt boundary:
+
+```elixir
+receipt_sink =
+  {Spectre.Lab.Fault.ReceiptSink,
+   controller: controller,
+   delegate: {MyReceiptSink, namespace: "test"}}
+```
+
+Use the operation keys `:receipt_append`, `:receipt_lookup`,
+`:receipt_put_payload`, and `:receipt_get_payload`. Append and payload staging
+support committed-but-ambiguous replies, so tests can exercise idempotent
+lookup, payload reconciliation, and required-receipt recovery through the same
+public contract used in production.
+
 ## Diagnostics
 
 ```console

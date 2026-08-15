@@ -2,6 +2,7 @@ defmodule SpectreLabTestCaseTest do
   use Spectre.Lab.TestCase, async: true
 
   alias Spectre.Lab.IOFuse
+  alias Spectre.Lab.Fault.Controller
   alias Spectre.Lab.Sandbox
 
   test "provides an isolated sandbox and a closed I/O fuse", context do
@@ -18,6 +19,18 @@ defmodule SpectreLabTestCaseTest do
   test "starts caller resources under the per-test sandbox", context do
     assert {:ok, child} = start_lab_child(context, {Agent, fn -> 41 end})
     assert Agent.get(child, &(&1 + 1)) == 42
+  end
+
+  test "starts persistence fault controllers in the same sandbox", context do
+    assert {:ok, controller} =
+             start_fault_controller(context, %{receipt_lookup: [{:fail_before, :offline}]})
+
+    assert {:fail_before, :offline} = Controller.next(controller, :receipt_lookup)
+
+    assert Enum.any?(Sandbox.children(context.sandbox), fn
+             {:undefined, pid, :worker, [Controller]} -> pid == controller
+             _child -> false
+           end)
   end
 
   test "asserts zero authorized dispatch while allowing blocked attempts", %{io_fuse: fuse} do

@@ -61,6 +61,14 @@ Omitted and exhausted operations pass through. `:commit_then_return` first
 requires the delegate mutation to return `:ok`, then exposes only Spectre's
 ambiguous mutation reply shape. It is rejected for `load`.
 
+The controller also accepts `:receipt_append`, `:receipt_lookup`,
+`:receipt_put_payload`, and `:receipt_get_payload`. Wrap a real test sink with
+`Spectre.Lab.Fault.ReceiptSink`; committed-but-ambiguous actions are valid only
+for append and payload staging. When payload staging loses its acknowledgement,
+`Spectre.Receipt.Sink.put_payload/3` performs its ordinary content-addressed
+readback through the wrapper, so the test observes production reconciliation
+rather than a Lab-specific shortcut.
+
 ## Fixture discipline
 
 Capture fixtures through Spectre Ledger's public Entry and Bundle contracts and

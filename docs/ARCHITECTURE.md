@@ -79,6 +79,12 @@ serializes FIFO actions for `load`, `compare_and_swap`, and
 `migrate_instance_key`. A committed-but-ambiguous response is available only
 for mutation operations and preserves Spectre's public ambiguity reply shape.
 
+`Spectre.Lab.Fault.ReceiptSink` applies the same script model to the four
+callbacks owned by `Spectre.Receipt.Sink`. Read faults happen before delegate
+access. Append and payload staging can commit through the real delegate and
+then return an ambiguous lost acknowledgement, allowing the core's normal
+lookup and content-addressed payload reconciliation paths to run unchanged.
+
 ## Dependency boundary
 
 Lab depends on Spectre `~> 0.3.2`, Spectre Ledger `~> 0.1.0`, and Jason. Ecto

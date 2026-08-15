@@ -19,6 +19,8 @@ Initial release for Spectre 0.3.2 and Spectre Ledger 0.1.x.
 - an ExUnit case template and safe test generator;
 - deterministic fault scripts around Spectre's public checkpoint-store
   behaviour, including ambiguous committed-write simulation;
+- the same deterministic fail-before and committed-but-ambiguous scripting for
+  Spectre 0.3.2 receipt append, lookup, payload staging, and payload readback;
 - read-only Lab Doctor and focused bundle verification Mix tasks;
 - explicit, environment-selected local Spectre and Ledger path overrides;
 - normative public API, package, documentation, and source release contracts.

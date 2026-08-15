@@ -36,10 +36,11 @@ port, process, model-adapter, or other side-effecting calls. Tests must route
 the relevant adapter boundary through the fuse or replace that adapter with a
 test implementation.
 
-Fault scripts operate only through `Spectre.Lab.Fault.CheckpointStore`, which
-wraps the public Spectre checkpoint-store contract. The controller stores
-scripted reasons supplied by the test; do not place production secrets in a
-script. Snapshots expose only counters and remaining action counts.
+Fault scripts operate only through `Spectre.Lab.Fault.CheckpointStore` and
+`Spectre.Lab.Fault.ReceiptSink`, which wrap public Spectre contracts. The
+controller stores scripted reasons supplied by the test; do not place
+production secrets in a script. Snapshots expose only counters and remaining
+action counts, never receipt payloads or checkpoint bytes.
 
 Sandboxes and controllers are caller-owned and unregistered. Hosts remain
 responsible for supervision, process authorization, and cleanup of any resource

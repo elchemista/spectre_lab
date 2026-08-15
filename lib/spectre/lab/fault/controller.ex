@@ -1,31 +1,54 @@
 defmodule Spectre.Lab.Fault.Controller do
   @moduledoc """
-  Caller-owned deterministic script for checkpoint-store fault injection.
+  Caller-owned deterministic script for persistence fault injection.
 
-  Scripts are maps whose keys are public checkpoint-store operations and whose
-  values are FIFO action lists. An exhausted or omitted operation passes by
-  default. The controller is deliberately unregistered and serializes script
-  consumption without timers or global state.
+  Scripts are maps whose keys are supported checkpoint-store or receipt-sink
+  operations and whose values are FIFO action lists. An exhausted or omitted
+  operation passes by default. The controller is deliberately unregistered
+  and serializes script consumption without timers or global state.
 
       %{
         compare_and_swap: [
           :pass,
           {:fail_before, :unavailable},
           {:commit_then_return, {:error, {:ambiguous, :lost_ack}}}
+        ],
+        receipt_put_payload: [
+          {:commit_then_return, {:error, {:ambiguous, :staging_ack_lost}}}
         ]
       }
 
   `:commit_then_return` is accepted only for mutation operations and only with
-  the checkpoint-store ambiguity shape.
+  Spectre's ambiguity shape. It first lets the wrapped adapter commit and then
+  returns the scripted lost-ack result.
   """
 
   use GenServer
 
-  @operations [:load, :compare_and_swap, :migrate_instance_key]
-  @mutation_operations [:compare_and_swap, :migrate_instance_key]
+  @checkpoint_operations [:load, :compare_and_swap, :migrate_instance_key]
+  @receipt_operations [
+    :receipt_append,
+    :receipt_lookup,
+    :receipt_put_payload,
+    :receipt_get_payload
+  ]
+  @operations @checkpoint_operations ++ @receipt_operations
+  @mutation_operations [
+    :compare_and_swap,
+    :migrate_instance_key,
+    :receipt_append,
+    :receipt_put_payload
+  ]
   @action_names [:pass, :fail_before, :commit_then_return]
 
-  @type operation :: :load | :compare_and_swap | :migrate_instance_key
+  @type operation ::
+          :load
+          | :compare_and_swap
+          | :migrate_instance_key
+          | :receipt_append
+          | :receipt_lookup
+          | :receipt_put_payload
+          | :receipt_get_payload
   @type action ::
           :pass
           | {:fail_before, term()}
@@ -50,7 +73,7 @@ defmodule Spectre.Lab.Fault.Controller do
     end
   end
 
-  @doc "Consumes and returns the next action for one public store operation."
+  @doc "Consumes and returns the next action for one supported persistence operation."
   @spec next(pid(), operation()) :: action() | {:error, term()}
   def next(controller, operation)
       when is_pid(controller) and operation in @operations do
