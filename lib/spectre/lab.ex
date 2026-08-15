@@ -1,6 +1,6 @@
 defmodule Spectre.Lab do
   @moduledoc """
-  Verified offline checkpoint playback and testing tools for Spectre 0.3.1.
+  Verified offline checkpoint playback and testing tools for Spectre 0.3.2.
 
   Lab consumes the bundle format owned by Spectre Ledger. It does not add an
   owner, scheduler, storage backend, or live execution replay to Spectre.
@@ -10,7 +10,7 @@ defmodule Spectre.Lab do
     id: :spectre_lab,
     version: "0.1.0",
     contract: 1,
-    spectre: "~> 0.3.1",
+    spectre: "~> 0.3.2",
     requires: [{:package, :spectre_ledger, "~> 0.1.0"}],
     provides: [
       {:contract, {:spectre_lab, :checkpoint_playback, 1}},

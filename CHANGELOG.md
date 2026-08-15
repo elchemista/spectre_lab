@@ -4,7 +4,7 @@ All notable changes to Spectre Lab are documented here.
 
 ## 0.1.0
 
-Initial release for Spectre 0.3.1 and Spectre Ledger 0.1.x.
+Initial release for Spectre 0.3.2 and Spectre Ledger 0.1.x.
 
 ### Added
 
@@ -21,4 +21,4 @@ Initial release for Spectre 0.3.1 and Spectre Ledger 0.1.x.
   behaviour, including ambiguous committed-write simulation;
 - read-only Lab Doctor and focused bundle verification Mix tasks;
 - explicit, environment-selected local Spectre and Ledger path overrides;
-- normative public API, package, documentation, and Hex release contracts.
+- normative public API, package, documentation, and source release contracts.

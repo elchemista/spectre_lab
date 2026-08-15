@@ -78,7 +78,7 @@ load an existing module named by checkpoint data.
 
 ## Project gates
 
-The release suite can run against adjacent Spectre and Ledger 0.3.1 / 0.1.x
+The release suite can run against adjacent Spectre and Ledger 0.3.2 / 0.1.x
 checkouts only through explicit path overrides:
 
 ```console
@@ -87,7 +87,7 @@ SPECTRE_PATH=../spectre SPECTRE_LEDGER_PATH=../spectre_ledger mix test
 ```
 
 Without those variables, even when sibling directories exist, Mix keeps the
-published `~> 0.3.1` and `~> 0.1.0` requirements.
+declared Spectre `~> 0.3.2` Hex source and Ledger 0.1.0 GitHub source.
 
 Lab tests and bundle consumers require no PostgreSQL service, Ecto Repo, Ecto
 SQL, or Postgrex dependency.

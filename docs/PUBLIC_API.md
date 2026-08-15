@@ -1,7 +1,7 @@
 # Spectre Lab public API — 0.1.0
 
 This file is the normative public API manifest for Spectre Lab `0.1.0`, which
-targets Spectre `~> 0.3.1` and Spectre Ledger `~> 0.1.0`. Compatibility
+targets Spectre `~> 0.3.2` and Spectre Ledger `~> 0.1.0`. Compatibility
 guarantees apply only to the modules and callables listed below. Anything
 absent from this manifest is an implementation detail, even when exported by
 the BEAM or visible in generated documentation.

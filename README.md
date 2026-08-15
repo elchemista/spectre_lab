@@ -1,7 +1,7 @@
 # Spectre Lab
 
 Spectre Lab 0.1.0 provides verified offline checkpoint playback and isolated
-testing tools for Spectre 0.3.1. It consumes the Bundle v1 contract owned by
+testing tools for Spectre 0.3.2. It consumes the Bundle v1 contract owned by
 Spectre Ledger 0.1.x; it does not add an owner, scheduler, storage backend, or
 history subsystem to Spectre core.
 
@@ -15,9 +15,11 @@ effects.
 ```elixir
 def deps do
   [
-    {:spectre, "~> 0.3.1"},
-    {:spectre_ledger, "~> 0.1.0"},
-    {:spectre_lab, "~> 0.1.0", only: [:dev, :test]}
+    {:spectre, "~> 0.3.2"},
+    {:spectre_ledger,
+     github: "elchemista/spectre_ledger",
+     ref: "404858a4e1e91716a13219e87bf5308f3efd2395"},
+    {:spectre_lab, github: "elchemista/spectre_lab", branch: "main", only: [:dev, :test]}
   ]
 end
 ```
@@ -32,8 +34,9 @@ SPECTRE_PATH=../spectre SPECTRE_LEDGER_PATH=../spectre_ledger mix deps.get
 SPECTRE_PATH=../spectre SPECTRE_LEDGER_PATH=../spectre_ledger mix test
 ```
 
-Merely placing sibling repositories next to Lab does not replace the published
-Hex requirements.
+Merely placing sibling repositories next to Lab does not replace its declared
+sources. Spectre is resolved from Hex; Ledger 0.1.0 and Lab 0.1.0 remain
+GitHub-only until their maintainers decide they are ready to publish.
 
 ## Verified checkpoint playback
 
