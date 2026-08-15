@@ -1,9 +1,9 @@
 # Spectre Lab
 
-Spectre Lab 0.1.0 provides verified offline checkpoint playback and isolated
-testing tools for Spectre 0.3.2. It consumes the Bundle v1 contract owned by
-Spectre Ledger 0.1.x; it does not add an owner, scheduler, storage backend, or
-history subsystem to Spectre core.
+Spectre Lab 0.1.0 provides verified offline checkpoint and boundary-receipt
+playback plus isolated testing tools for Spectre 0.3.2. It consumes contracts
+owned by Spectre Ledger 0.1.x; it does not add an owner, scheduler, storage
+backend, or history subsystem to Spectre core.
 
 Lab plays back only checkpoints that Spectre actually persisted. Spectre may
 coalesce checkpoint writes, so Lab does **not** claim every runtime revision,
@@ -213,9 +213,10 @@ mix spectre_lab.doctor --format json
 mix spectre_lab.bundle.verify test/fixtures/account-checkpoints.json --format json
 ```
 
-Doctor composes the public Spectre Doctor and Stack conformance contracts. It
-does not start resources or access a Ledger backend. Bundle file access belongs
-to the Mix tasks and is bounded to 64 MiB.
+Doctor composes the public Spectre Doctor and Stack conformance contracts and
+checks the checkpoint and boundary-receipt playback capabilities. It does not
+start resources or access a Ledger backend. Bundle file access belongs to the
+Mix tasks and is bounded to 64 MiB.
 
 See [Architecture](docs/ARCHITECTURE.md), [Testing](docs/TESTING.md), and the
 normative [Public API](docs/PUBLIC_API.md).

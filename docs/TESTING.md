@@ -131,3 +131,19 @@ declared Spectre `~> 0.3.2` Hex source and Ledger 0.1.0 GitHub source.
 
 Lab tests and bundle consumers require no PostgreSQL service, Ecto Repo, Ecto
 SQL, or Postgrex dependency.
+
+The source-release gates are:
+
+```console
+mix format --check-formatted
+mix compile --warnings-as-errors
+mix test --cover
+mix credo --all
+mix docs --warnings-as-errors
+mix dialyzer
+mix hex.audit
+```
+
+Lab remains a GitHub-only `0.1.0` package while Ledger is GitHub-only, so its
+CI deliberately validates the source release instead of pretending that its
+Git dependency can be published to Hex.

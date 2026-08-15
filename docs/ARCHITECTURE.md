@@ -10,8 +10,9 @@ runtime owner, checkpoint format, storage backend, or replay engine to core.
   checkpoint timing, recovery, and the Foundation checkpoint verifier.
 - Spectre Ledger implements `Spectre.Instance.CheckpointStore`, owns Entry and
   Bundle v1, and verifies persisted checkpoint chains and objects.
-- Lab consumes a verified Bundle v1 as an immutable checkpoint playback and
-  supplies caller-owned testing helpers.
+- Lab consumes a verified Bundle v1 as an immutable checkpoint playback,
+  verifies detached boundary-receipt chains, and supplies caller-owned
+  testing helpers.
 - The host owns bundle provenance, authorization, fixture capture, code-path
   isolation, test adapter selection, and all process supervision outside a Lab
   sandbox.

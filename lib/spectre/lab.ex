@@ -1,9 +1,11 @@
 defmodule Spectre.Lab do
   @moduledoc """
-  Verified offline checkpoint playback and testing tools for Spectre 0.3.2.
+  Verified offline evidence playback and testing tools for Spectre 0.3.2.
 
-  Lab consumes the bundle format owned by Spectre Ledger. It does not add an
-  owner, scheduler, storage backend, or live execution replay to Spectre.
+  Lab consumes checkpoint and boundary-receipt contracts owned by Spectre
+  Ledger and supplies a deterministic streaming fixture adapter. It does not
+  add an owner, scheduler, storage backend, or live execution replay to
+  Spectre.
   """
 
   use Spectre.Stack.Installable,

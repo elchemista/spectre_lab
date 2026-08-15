@@ -16,7 +16,7 @@ defmodule SpectreLab.SourceReleaseContractTest do
     assert config[:homepage_url] == "https://github.com/elchemista/spectre_lab"
 
     assert config[:description] ==
-             "Verified offline checkpoint playback and testing tools for Spectre."
+             "Verified offline evidence playback and testing tools for Spectre."
 
     assert package[:name] == "spectre_lab"
     assert package[:maintainers] == ["elchemista"]

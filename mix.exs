@@ -14,7 +14,7 @@ defmodule SpectreLab.MixProject do
       deps: deps(),
       test_coverage: [summary: [threshold: 90]],
       test_ignore_filters: [&String.starts_with?(&1, "test/support/")],
-      description: "Verified offline checkpoint playback and testing tools for Spectre.",
+      description: "Verified offline evidence playback and testing tools for Spectre.",
       package: package(),
       docs: docs(),
       dialyzer: [plt_add_apps: [:mix, :ex_unit]],
