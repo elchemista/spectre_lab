@@ -178,6 +178,111 @@ defmodule SpectreLabInferenceStreamAdapterTest do
              StreamAdapter.resume(descriptor(), :opaque_provider_cursor, script: script)
   end
 
+  test "exposes optional capabilities and stable reconciliation outcomes" do
+    capabilities =
+      StreamAdapter.capabilities(:fixture,
+        cost_usage: true,
+        reconcile_result: :pending
+      )
+
+    assert MapSet.subset?(MapSet.new([:cost_usage, :reconcile]), capabilities)
+
+    for {configured, expected} <- [
+          {{:ok, %{reply_text: "done"}}, {:ok, %{reply_text: "done"}}},
+          {:pending, :pending},
+          {:not_found, :not_found},
+          {{:error, :offline}, {:error, :offline}},
+          {:invalid, {:error, :invalid_lab_stream_reconcile_result}}
+        ] do
+      assert StreamAdapter.reconcile(descriptor(), "request", reconcile_result: configured) ==
+               expected
+    end
+
+    assert StreamAdapter.reconcile(descriptor(), "request", []) == :not_found
+  end
+
+  test "enforces pull credit, fixture identity, and owned bounds" do
+    script = StreamScript.new!([:stall])
+    opts = adapter_opts(script, delivery: :external)
+
+    assert {:ok, state, _metadata} = StreamAdapter.open(descriptor(), opts)
+    assert {:ok, waiting} = StreamAdapter.request_transport_item(state)
+
+    assert {:error, :lab_stream_demand_already_outstanding} =
+             StreamAdapter.request_transport_item(waiting)
+
+    assert {:error, :lab_stream_fixture_mismatch, ^waiting} =
+             StreamAdapter.handle_transport(
+               {:spectre_lab_stream_item, waiting.token, 99, :stall},
+               waiting
+             )
+
+    assert {:error, :lab_stream_stall_delivered, delivered} =
+             StreamAdapter.handle_transport(
+               {:spectre_lab_stream_item, waiting.token, 1, :stall},
+               waiting
+             )
+
+    assert {:error, :lab_stream_script_exhausted} =
+             StreamAdapter.request_transport_item(delivered)
+
+    assert {:ignore, ^delivered} = StreamAdapter.handle_transport(:unrelated, delivered)
+
+    small = {:spectre_lab_stream_bound, delivered.token, :transport_chunk, "ok"}
+    assert {:ok, [], ^delivered} = StreamAdapter.handle_transport(small, delivered)
+  end
+
+  test "fails closed for every adapter-owned option" do
+    script = StreamScript.text!("options")
+    bounds = adapter_opts(script)
+
+    assert {:error, :forced_open_failure} =
+             StreamAdapter.open(
+               descriptor(),
+               Keyword.put(bounds, :open_error, :forced_open_failure)
+             )
+
+    assert {:error, :missing_lab_stream_script} =
+             StreamAdapter.open(descriptor(), Keyword.delete(bounds, :script))
+
+    assert {:error, :duplicate_lab_stream_script} =
+             StreamAdapter.open(descriptor(), [{:script, script} | bounds])
+
+    assert {:error, :invalid_lab_stream_cursor} =
+             StreamAdapter.resume(descriptor(), {:spectre_lab, 99}, bounds)
+
+    assert {:error, :invalid_lab_stream_delivery} =
+             StreamAdapter.open(descriptor(), Keyword.put(bounds, :delivery, :callback))
+
+    assert {:error, :invalid_lab_stream_cancel_reply} =
+             StreamAdapter.open(descriptor(), Keyword.put(bounds, :cancel_reply, :ignored))
+
+    assert {:error, :invalid_lab_stream_metadata} =
+             StreamAdapter.open(descriptor(), Keyword.put(bounds, :metadata, self()))
+  end
+
+  test "keeps explicit cursors and reduces cancellation reasons for observers" do
+    event = ProviderEvent.delta("x", provider_sequence: 0, cursor: {:provider, 7})
+    script = StreamScript.new!([event])
+    opts = adapter_opts(script, observer: self())
+
+    assert {:ok, state, _metadata} = StreamAdapter.open(descriptor(), opts)
+    assert {:ok, waiting} = StreamAdapter.request_transport_item(state)
+    assert_receive {:spectre_lab_stream_item, token, 1, item}
+
+    assert {:ok, [%ProviderEvent{cursor: {:provider, 7}}], delivered} =
+             StreamAdapter.handle_transport(
+               {:spectre_lab_stream_item, token, 1, item},
+               waiting
+             )
+
+    assert :ok = StreamAdapter.cancel(delivered, {:shutdown, :owner, :detail})
+    assert_receive {:spectre_lab_stream, {:cancelled, _session, :shutdown}}
+
+    assert :ok = StreamAdapter.cancel(delivered, %{private: "reason"})
+    assert_receive {:spectre_lab_stream, {:cancelled, _session, :error}}
+  end
+
   defp start_instance(context, label) do
     {:ok, instance} =
       start_lab_child(
@@ -213,6 +318,19 @@ defmodule SpectreLabInferenceStreamAdapterTest do
       plan: %Plan{rendered: "stream"},
       constraints: %Constraints{}
     }
+  end
+
+  defp adapter_opts(script, opts \\ []) do
+    Keyword.merge(
+      [
+        script: script,
+        spectre_bounds: [
+          max_transport_chunk_bytes: 256,
+          max_parser_residual_bytes: 256
+        ]
+      ],
+      opts
+    )
   end
 
   defp collect_observer_messages(messages) do

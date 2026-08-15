@@ -97,6 +97,47 @@ defmodule SpectreLabInferenceStreamScriptTest do
              StreamScript.conformance_messages(stalled, :token)
   end
 
+  test "rejects malformed top-level values and provider events" do
+    assert {:error, :invalid_lab_stream_script} = StreamScript.new(:not_a_script)
+
+    assert_raise ArgumentError, ~r/invalid Lab stream script/, fn ->
+      StreamScript.new!([:invalid])
+    end
+
+    invalid_event = %ProviderEvent{kind: :unknown}
+
+    assert {:error, {:invalid_lab_stream_script_item, 0, :invalid_provider_event_kind}} =
+             StreamScript.new([invalid_event])
+
+    assert {:error, {:invalid_lab_stream_script_item, 0, :invalid_provider_event}} =
+             StreamScript.new([[123]])
+  end
+
+  test "rejects malformed text and supports an empty terminal response" do
+    assert {:error, :invalid_lab_stream_text} = StreamScript.text(<<255>>)
+    assert {:error, :invalid_lab_stream_text_options} = StreamScript.text(:not_text)
+    assert {:error, :invalid_lab_stream_text_options} = StreamScript.text("x", [:not_keyword])
+    assert {:error, :invalid_lab_stream_chunks} = StreamScript.text("x", chunks: :invalid)
+
+    assert {:ok, script} = StreamScript.text("")
+    assert Enum.map(events(script), & &1.kind) == [:started, :usage, :completed]
+    assert List.last(events(script)).usage.output_tokens == 0
+    assert List.last(events(script)).usage.cost == 0
+  end
+
+  test "reports the exact invalid usage option" do
+    for {opts, reason} <- [
+          {[input_tokens: -1], :invalid_lab_stream_input_tokens},
+          {[output_tokens: -1], :invalid_lab_stream_output_tokens},
+          {[cost: -0.01], :invalid_lab_stream_cost},
+          {[duration_ms: -1], :invalid_lab_stream_duration},
+          {[usage_quality: :guessed], :invalid_lab_stream_usage_quality},
+          {[provider_request_id: ""], :invalid_lab_stream_provider_request_id}
+        ] do
+      assert {:error, ^reason} = StreamScript.text("usage", opts)
+    end
+  end
+
   defp events(script) do
     Enum.flat_map(script.items, fn
       {:events, events} -> events

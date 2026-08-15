@@ -108,6 +108,24 @@ defmodule SpectreLabReceiptPlaybackTest do
     assert ReceiptPlayback.sequences(playback) == []
     assert ReceiptPlayback.by_kind(playback, :policy_decision) == []
     assert ReceiptPlayback.for_run(playback, "missing") == []
+    assert ReceiptPlayback.fetch(playback, 0) == :not_found
+    assert ReceiptPlayback.fetch(playback, :invalid) == :not_found
+    assert ReceiptPlayback.by_kind(playback, "policy_decision") == []
+    assert ReceiptPlayback.for_run(playback, "") == []
+  end
+
+  test "reports complete state linkage when every receipt carries both digests", context do
+    stream_key = unique_stream("linked")
+    {_server, opts, sink} = receipt_store(context, stream_key)
+    receipt = policy_receipt(stream_key, "run-linked", 1)
+
+    assert {:ok, :appended} = Sink.append(sink, receipt, [])
+    assert {:ok, entries} = Ledger.receipt_entries(stream_key, opts)
+    assert {:ok, envelopes} = Ledger.receipts(stream_key, opts)
+    assert {:ok, playback} = Lab.load_receipts(entries, envelopes)
+
+    assert playback.completeness.state_linkage == :complete
+    assert playback.completeness.linked_state_count == 1
   end
 
   defp receipt_store(context, stream_key) do

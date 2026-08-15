@@ -200,29 +200,35 @@ defmodule Spectre.Lab.Inference.StreamScript do
 
     usage = Map.merge(defaults, Map.new(Keyword.take(opts, Map.keys(defaults))))
 
-    cond do
-      not non_neg_integer?(usage.input_tokens) ->
-        {:error, :invalid_lab_stream_input_tokens}
+    validate_usage(usage)
+  end
 
-      not non_neg_integer?(usage.output_tokens) ->
-        {:error, :invalid_lab_stream_output_tokens}
+  # Keeping validation data-driven makes every option's failure stable without
+  # burying the text builder under a long conditional.
+  defp validate_usage(usage) do
+    checks = [
+      {non_neg_integer?(usage.input_tokens), :invalid_lab_stream_input_tokens},
+      {non_neg_integer?(usage.output_tokens), :invalid_lab_stream_output_tokens},
+      {valid_cost?(usage.cost), :invalid_lab_stream_cost},
+      {non_neg_integer?(usage.duration_ms), :invalid_lab_stream_duration},
+      {valid_usage_quality?(usage.usage_quality), :invalid_lab_stream_usage_quality},
+      {valid_provider_request_id?(usage.provider_request_id),
+       :invalid_lab_stream_provider_request_id}
+    ]
 
-      not is_number(usage.cost) or usage.cost < 0 ->
-        {:error, :invalid_lab_stream_cost}
-
-      not non_neg_integer?(usage.duration_ms) ->
-        {:error, :invalid_lab_stream_duration}
-
-      usage.usage_quality not in [:provider, :estimated, :unavailable] ->
-        {:error, :invalid_lab_stream_usage_quality}
-
-      not is_binary(usage.provider_request_id) or usage.provider_request_id == "" ->
-        {:error, :invalid_lab_stream_provider_request_id}
-
-      true ->
-        {:ok, usage}
+    case Enum.find(checks, fn {valid?, _reason} -> not valid? end) do
+      nil -> {:ok, usage}
+      {_valid?, reason} -> {:error, reason}
     end
   end
+
+  defp valid_cost?(cost), do: is_number(cost) and cost >= 0
+
+  defp valid_usage_quality?(quality),
+    do: quality in [:provider, :estimated, :unavailable]
+
+  defp valid_provider_request_id?(request_id),
+    do: is_binary(request_id) and request_id != ""
 
   defp build_text_script(text, chunks, usage) do
     started =
