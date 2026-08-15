@@ -1,9 +1,9 @@
 # Spectre Lab
 
-Spectre Lab 0.1.0 provides verified offline checkpoint playback and isolated
-testing tools for Spectre 0.3.1. It consumes the Bundle v1 contract owned by
-Spectre Ledger 0.1.x; it does not add an owner, scheduler, storage backend, or
-history subsystem to Spectre core.
+Spectre Lab 0.1.0 provides verified offline checkpoint and boundary-receipt
+playback plus isolated testing tools for Spectre 0.3.2. It consumes contracts
+owned by Spectre Ledger 0.1.x; it does not add an owner, scheduler, storage
+backend, or history subsystem to Spectre core.
 
 Lab plays back only checkpoints that Spectre actually persisted. Spectre may
 coalesce checkpoint writes, so Lab does **not** claim every runtime revision,
@@ -15,9 +15,11 @@ effects.
 ```elixir
 def deps do
   [
-    {:spectre, "~> 0.3.1"},
-    {:spectre_ledger, "~> 0.1.0"},
-    {:spectre_lab, "~> 0.1.0", only: [:dev, :test]}
+    {:spectre, "~> 0.3.2"},
+    {:spectre_ledger,
+     github: "elchemista/spectre_ledger",
+     ref: "404858a4e1e91716a13219e87bf5308f3efd2395"},
+    {:spectre_lab, github: "elchemista/spectre_lab", branch: "main", only: [:dev, :test]}
   ]
 end
 ```
@@ -32,8 +34,9 @@ SPECTRE_PATH=../spectre SPECTRE_LEDGER_PATH=../spectre_ledger mix deps.get
 SPECTRE_PATH=../spectre SPECTRE_LEDGER_PATH=../spectre_ledger mix test
 ```
 
-Merely placing sibling repositories next to Lab does not replace the published
-Hex requirements.
+Merely placing sibling repositories next to Lab does not replace its declared
+sources. Spectre is resolved from Hex; Ledger 0.1.0 and Lab 0.1.0 remain
+GitHub-only until their maintainers decide they are ready to publish.
 
 ## Verified checkpoint playback
 
@@ -70,6 +73,32 @@ The completeness map reports persisted revisions and gaps explicitly. A gap is
 not inferred execution history; it only says that intermediate revisions are
 absent from the persisted checkpoint chain.
 
+## Boundary receipt playback
+
+Ledger 0.1.0 keeps receipt entries and envelope objects outside Bundle v1.
+Fetch a complete chain through Ledger, then detach it into an offline Lab
+playback:
+
+```elixir
+{:ok, entries} = Spectre.Ledger.receipt_entries(instance_ref, ledger_opts)
+{:ok, envelopes} = Spectre.Ledger.receipts(instance_ref, ledger_opts)
+
+{:ok, receipts} = Spectre.Lab.load_receipts(entries, envelopes)
+[1, 2, 3] = Spectre.Lab.ReceiptPlayback.sequences(receipts)
+terminal = Spectre.Lab.ReceiptPlayback.by_kind(receipts, :inference_attempt_terminal)
+```
+
+Loading performs no backend access. Lab re-verifies the complete physical
+entry chain and every entry/envelope binding, hashes the stream key in its
+verification report, and preserves physical append order. Its completeness
+map reports separately whether canonical revisions were ordered and whether
+state digests were present. It never claims every revision, deterministic
+replay, or exactly-once external effects.
+
+Lab deliberately does not define a receipt bundle format. Until Ledger owns
+one, callers must protect the in-memory entries and confidential envelopes and
+must not treat two independently paginated queries as a complete chain.
+
 ## ExUnit test case
 
 ```elixir
@@ -89,6 +118,40 @@ Each case receives an unregistered, caller-supervised sandbox and a closed
 `Spectre.Lab.IOFuse`. The fuse gates only work explicitly routed through
 `IOFuse.dispatch/2`; it is not a universal network, file, process, or adapter
 interceptor.
+
+## Virtual streaming inference
+
+Exercise the real Spectre 0.3.2 streaming runtime without opening a provider
+connection:
+
+```elixir
+script =
+  Spectre.Lab.Inference.StreamScript.text!("hello from the fixture",
+    chunk_size: 4
+  )
+
+{:ok, stream} =
+  Spectre.stream(instance, "stream this",
+    model: MyApp.TestModel,
+    plan_actions?: false,
+    stream_adapter: Spectre.Lab.Inference.StreamAdapter,
+    stream_adapter_opts: [script: script, observer: self()]
+  )
+
+events = Enum.to_list(stream)
+```
+
+The adapter is lazy and pull-driven: one consumer demand schedules at most one
+scripted transport item in the real session mailbox. Scripts may contain
+provider-event batches, `:stall`, or `{:transport_error, reason}` and can split
+UTF-8 codepoints exactly like network chunks. Early Enumerable termination
+goes through the normal provider cancellation path. The test model is still
+needed for immutable selection identity, but its synchronous `complete/2`
+callback is never used.
+
+This is deterministic fixture delivery, not deterministic replay of a prior
+model call. Restart support resumes only from the explicit
+`{:spectre_lab, consumed_items}` cursor stamped on delivered fixture batches.
 
 Generate a safe starter test with:
 
@@ -126,6 +189,21 @@ store =
 The adapter preserves Spectre's existing checkpoint-store normalization and
 ambiguity semantics; it does not invent a second persistence contract.
 
+The same controller can inject failures at the Spectre 0.3.2 receipt boundary:
+
+```elixir
+receipt_sink =
+  {Spectre.Lab.Fault.ReceiptSink,
+   controller: controller,
+   delegate: {MyReceiptSink, namespace: "test"}}
+```
+
+Use the operation keys `:receipt_append`, `:receipt_lookup`,
+`:receipt_put_payload`, and `:receipt_get_payload`. Append and payload staging
+support committed-but-ambiguous replies, so tests can exercise idempotent
+lookup, payload reconciliation, and required-receipt recovery through the same
+public contract used in production.
+
 ## Diagnostics
 
 ```console
@@ -135,9 +213,10 @@ mix spectre_lab.doctor --format json
 mix spectre_lab.bundle.verify test/fixtures/account-checkpoints.json --format json
 ```
 
-Doctor composes the public Spectre Doctor and Stack conformance contracts. It
-does not start resources or access a Ledger backend. Bundle file access belongs
-to the Mix tasks and is bounded to 64 MiB.
+Doctor composes the public Spectre Doctor and Stack conformance contracts and
+checks the checkpoint and boundary-receipt playback capabilities. It does not
+start resources or access a Ledger backend. Bundle file access belongs to the
+Mix tasks and is bounded to 64 MiB.
 
 See [Architecture](docs/ARCHITECTURE.md), [Testing](docs/TESTING.md), and the
 normative [Public API](docs/PUBLIC_API.md).

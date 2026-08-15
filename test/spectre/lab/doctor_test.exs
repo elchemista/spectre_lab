@@ -38,11 +38,14 @@ defmodule SpectreLab.DoctorTest do
                )
 
       assert report.status == :ok
-      assert report.spectre_version == "0.3.1"
+      assert report.spectre_version == "0.3.2"
       assert report.ledger_version == "0.1.0"
       assert report.lab_version == "0.1.0"
 
       assert %{status: :ok, code: :lab_stack_compatible} = check(report, "lab.stack")
+
+      assert %{status: :ok, code: :ledger_receipt_contract_valid} =
+               check(report, "lab.receipt_contract")
 
       assert %{status: :ok, code: :lab_bundle_verified, details: details} =
                check(report, "lab.bundle_artifact")
@@ -104,7 +107,7 @@ defmodule SpectreLab.DoctorTest do
     assert Report.format(report, :text) =~ "Spectre Lab doctor 0.1.0: ok"
     assert {:ok, json} = report |> Report.format(:json) |> Jason.decode()
     assert json["contract_version"] == 1
-    assert json["core"]["spectre_version"] == "0.3.1"
+    assert json["core"]["spectre_version"] == "0.3.2"
     assert json["summary"]["errors"] == 0
 
     warning = %{report | summary: %{report.summary | warnings: 1}}

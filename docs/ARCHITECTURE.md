@@ -10,8 +10,9 @@ runtime owner, checkpoint format, storage backend, or replay engine to core.
   checkpoint timing, recovery, and the Foundation checkpoint verifier.
 - Spectre Ledger implements `Spectre.Instance.CheckpointStore`, owns Entry and
   Bundle v1, and verifies persisted checkpoint chains and objects.
-- Lab consumes a verified Bundle v1 as an immutable checkpoint playback and
-  supplies caller-owned testing helpers.
+- Lab consumes a verified Bundle v1 as an immutable checkpoint playback,
+  verifies detached boundary-receipt chains, and supplies caller-owned
+  testing helpers.
 - The host owns bundle provenance, authorization, fixture capture, code-path
   isolation, test adapter selection, and all process supervision outside a Lab
   sandbox.
@@ -40,6 +41,21 @@ Foundation verification decodes the checkpoint and may load an existing module
 named by encoded data. Consequently Bundle v1 remains a trusted/local artifact
 boundary for Lab 0.1.x even though Ledger applies resource limits and verifies
 content integrity.
+
+## Receipt playback pipeline
+
+`Spectre.Lab.load_receipts/2` accepts a complete list of Ledger receipt-chain
+entries paired with their validated core envelopes. Ledger's public
+`ReceiptChain` verifies physical sequence, linkage, entry identity, and stream
+consistency. Lab then verifies each entry/envelope content address and builds
+immutable frames without querying the backend.
+
+Receipt Bundle v1 does not exist: checkpoint Bundle v1 intentionally excludes
+the receipt chain. Lab therefore owns no receipt decoder, exporter, or storage
+format. Hosts obtain complete lists through Ledger and retain responsibility
+for consistency while capturing them. The resulting playback preserves
+physical append order and reports canonical ordering as a separate boolean;
+observational receipt delivery may legitimately make it false.
 
 ## Playback semantics
 
@@ -73,14 +89,30 @@ zero-arity function passed to `Spectre.Lab.IOFuse.dispatch/2` is gated and
 counted. Closing the fuse after a dispatch was authorized does not revoke work
 already running.
 
+`Spectre.Lab.Inference.StreamAdapter` is a pull adapter at the public core
+streaming boundary. Its immutable script remains caller-owned, and every
+credit schedules at most one tagged message in the owning session mailbox.
+The core still owns the Enumerable, buffering, fencing, sanitization, usage
+settlement, cancellation, restart, and terminal Result. Lab's cursor counts
+delivered fixture items; it does not claim to be a provider replay cursor.
+
 `Spectre.Lab.Fault.CheckpointStore` is an adapter at the existing
 `Spectre.Instance.CheckpointStore` behaviour. Its unregistered controller
 serializes FIFO actions for `load`, `compare_and_swap`, and
 `migrate_instance_key`. A committed-but-ambiguous response is available only
 for mutation operations and preserves Spectre's public ambiguity reply shape.
 
+`Spectre.Lab.Fault.ReceiptSink` applies the same script model to the four
+callbacks owned by `Spectre.Receipt.Sink`. Read faults happen before delegate
+access. Append and payload staging can commit through the real delegate and
+then return an ambiguous lost acknowledgement, allowing the core's normal
+lookup and content-addressed payload reconciliation paths to run unchanged.
+
 ## Dependency boundary
 
-Lab depends on Spectre `~> 0.3.1`, Spectre Ledger `~> 0.1.0`, and Jason. Ecto
+Lab depends on Spectre `~> 0.3.2`, Spectre Ledger `~> 0.1.0`, and Jason. Ecto
 SQL and Postgrex are neither direct nor required transitive dependencies. Lab
 does not select Ledger's optional PostgreSQL backend or supervise an Ecto Repo.
+Spectre resolves from Hex. Ledger remains an explicit, commit-pinned GitHub
+dependency until its maintainer publishes version 0.1.0; an adjacent checkout
+is selected only through `SPECTRE_LEDGER_PATH`.

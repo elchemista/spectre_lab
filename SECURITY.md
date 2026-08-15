@@ -28,6 +28,12 @@ Bundle v1 verification is bounded and detects malformed envelopes, broken
 entry chains, missing or extra objects, and digest mismatches. Those resource
 and integrity checks do not change the trusted-artifact rule.
 
+Receipt playbacks retain complete `Spectre.Receipt.Envelope` values, including
+ordinary admitted input or model output that constitutional redaction does not
+remove. They have no stable Lab serialization format and are not automatically
+encrypted. Keep them in the same access-control, retention, and deletion
+boundary as the Ledger backend, and capture only complete unpaginated chains.
+
 ## Test boundaries
 
 `Spectre.Lab.IOFuse` is fail-closed only for functions explicitly passed to
@@ -36,14 +42,21 @@ port, process, model-adapter, or other side-effecting calls. Tests must route
 the relevant adapter boundary through the fuse or replace that adapter with a
 test implementation.
 
-Fault scripts operate only through `Spectre.Lab.Fault.CheckpointStore`, which
-wraps the public Spectre checkpoint-store contract. The controller stores
-scripted reasons supplied by the test; do not place production secrets in a
-script. Snapshots expose only counters and remaining action counts.
+Fault scripts operate only through `Spectre.Lab.Fault.CheckpointStore` and
+`Spectre.Lab.Fault.ReceiptSink`, which wrap public Spectre contracts. The
+controller stores scripted reasons supplied by the test; do not place
+production secrets in a script. Snapshots expose only counters and remaining
+action counts, never receipt payloads or checkpoint bytes.
 
 Sandboxes and controllers are caller-owned and unregistered. Hosts remain
 responsible for supervision, process authorization, and cleanup of any resource
 started outside a Lab sandbox.
+
+Virtual stream scripts reside in the caller and Spectre session processes for
+the duration of a test. Do not put production prompts, credentials, provider
+metadata, or customer responses in fixtures. Optional observer messages never
+contain response deltas and reduce cancellation reasons to a stable class, but
+the public Stream events intentionally contain the scripted response text.
 
 ## Diagnostics and dependencies
 
@@ -58,4 +71,4 @@ scope.
 ## Supported versions
 
 Security fixes are provided for the latest released Spectre Lab 0.1.x version
-while it remains compatible with Spectre 0.3.1 and Spectre Ledger 0.1.x.
+while it remains compatible with Spectre 0.3.2 and Spectre Ledger 0.1.x.

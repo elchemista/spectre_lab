@@ -10,7 +10,7 @@ defmodule SpectreLab.PublicApiManifestTest do
     manifest = File.read!(@manifest_path)
 
     assert manifest =~ "# Spectre Lab public API — #{Spectre.Lab.version()}"
-    assert manifest =~ "Spectre `~> 0.3.1`"
+    assert manifest =~ "Spectre `~> 0.3.2`"
     assert manifest =~ "Spectre Ledger `~> 0.1.0`"
     assert Mix.Project.config()[:version] == Spectre.Lab.version()
 

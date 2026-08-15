@@ -25,6 +25,7 @@ defmodule SpectreLab.MixGeneratorTest do
       assert source =~ "defmodule MyApp.PlaybackTest"
       assert source =~ "use Spectre.Lab.TestCase, async: true"
       assert source =~ "assert_no_live_io"
+      assert source =~ "StreamScript.text!"
       refute source =~ "ledger/bundle"
       assert {:ok, _ast} = Code.string_to_quoted(source)
 

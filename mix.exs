@@ -14,7 +14,7 @@ defmodule SpectreLab.MixProject do
       deps: deps(),
       test_coverage: [summary: [threshold: 90]],
       test_ignore_filters: [&String.starts_with?(&1, "test/support/")],
-      description: "Verified offline checkpoint playback and testing tools for Spectre.",
+      description: "Verified offline evidence playback and testing tools for Spectre.",
       package: package(),
       docs: docs(),
       dialyzer: [plt_add_apps: [:mix, :ex_unit]],
@@ -39,11 +39,25 @@ defmodule SpectreLab.MixProject do
   end
 
   defp spectre_dep do
-    dependency(:spectre, "SPECTRE_PATH", "~> 0.3.1")
+    dependency(:spectre, "SPECTRE_PATH", "~> 0.3.2")
   end
 
   defp ledger_dep do
-    dependency(:spectre_ledger, "SPECTRE_LEDGER_PATH", "~> 0.1.0")
+    case System.get_env("SPECTRE_LEDGER_PATH") do
+      path when is_binary(path) and path != "" ->
+        {:spectre_ledger, [path: Path.expand(path, __DIR__), override: true]}
+
+      _unset ->
+        # Ledger 0.1.0 is intentionally GitHub-only until its owner publishes
+        # it. Keeping this source explicit makes a clean Lab checkout usable
+        # without pretending that a Hex package already exists.
+        {:spectre_ledger,
+         [
+           github: "elchemista/spectre_ledger",
+           ref: "404858a4e1e91716a13219e87bf5308f3efd2395",
+           override: true
+         ]}
+    end
   end
 
   defp dependency(name, env, requirement) do
@@ -63,9 +77,9 @@ defmodule SpectreLab.MixProject do
       files: ~w(lib priv docs mix.exs .formatter.exs README.md CHANGELOG.md SECURITY.md LICENSE),
       licenses: ["Apache-2.0"],
       links: %{
-        "Documentation" => "https://hexdocs.pm/spectre_lab/#{@version}",
+        "Documentation" => "#{@source_url}/blob/main/README.md",
         "GitHub" => @source_url,
-        "Changelog" => "#{@source_url}/blob/#{@version}/CHANGELOG.md"
+        "Changelog" => "#{@source_url}/blob/main/CHANGELOG.md"
       }
     ]
   end

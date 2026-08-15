@@ -2,8 +2,12 @@ defmodule SpectreLab.DependencySelectionContractTest do
   use ExUnit.Case, async: false
 
   @root Path.expand("..", __DIR__)
-  @spectre_requirement "~> 0.3.1"
-  @ledger_requirement "~> 0.1.0"
+  @spectre_requirement "~> 0.3.2"
+  @ledger_source [
+    github: "elchemista/spectre_ledger",
+    ref: "404858a4e1e91716a13219e87bf5308f3efd2395",
+    override: true
+  ]
 
   setup do
     workspace =
@@ -26,14 +30,14 @@ defmodule SpectreLab.DependencySelectionContractTest do
     {:ok, consumer: consumer, ledger: ledger, spectre: spectre, workspace: workspace}
   end
 
-  test "adjacent checkouts do not silently replace Hex requirements", context do
+  test "adjacent checkouts do not silently replace declared dependency sources", context do
     assert File.dir?(context.spectre)
     assert File.dir?(context.ledger)
 
     deps = project_dependencies(context, [])
 
     assert dependency(deps, :spectre) == {:spectre, @spectre_requirement}
-    assert dependency(deps, :spectre_ledger) == {:spectre_ledger, @ledger_requirement}
+    assert dependency(deps, :spectre_ledger) == {:spectre_ledger, @ledger_source}
   end
 
   test "explicit environment variables select local path overrides", context do

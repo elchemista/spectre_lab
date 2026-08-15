@@ -13,7 +13,7 @@ defmodule SpectreLab.PlaybackTest do
 
   @bundle_fixture Path.expand("fixtures/ledger-bundle-v1.json.base64", __DIR__)
 
-  test "keeps the Ledger bundle v1 cross-repository fixture readable" do
+  test "keeps the frozen legacy-checkpoint Bundle v1 fixture readable" do
     encoded =
       @bundle_fixture
       |> File.read!()
@@ -36,7 +36,7 @@ defmodule SpectreLab.PlaybackTest do
     assert playback.verification.bundle_version == 1
 
     assert playback.verification.checksum ==
-             "0a724d1779510428e2a45c8a8674ceec8355dba23b3dfe1763d87d9dd14ac9b7"
+             "93de5aa696ed3fbae449df01eddbc4fb651cb02ed14861e7e1c7c6fd5e27ae5b"
 
     assert %{capability: :checkpoint_playback, deterministic_replay: false} =
              Playback.completeness(playback)
@@ -157,6 +157,8 @@ defmodule SpectreLab.PlaybackTest do
     assert {:ok, package} = Installable.verify(Lab)
     assert package.requires == [{:package, :spectre_ledger, "~> 0.1.0"}]
     assert package.metadata.capability == :checkpoint_playback
+    assert package.metadata.receipt_capability == :boundary_receipt_playback
+    refute package.metadata.receipt_bundle
     refute package.metadata.every_revision
     refute package.metadata.deterministic_replay
   end
