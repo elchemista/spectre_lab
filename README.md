@@ -1,9 +1,9 @@
 # Spectre Lab
 
-Spectre Lab 0.1.0 provides verified offline checkpoint and boundary-receipt
-playback plus isolated testing tools for Spectre 0.3.2. It consumes contracts
-owned by Spectre Ledger 0.1.x; it does not add an owner, scheduler, storage
-backend, or history subsystem to Spectre core.
+Spectre Lab provides verified offline checkpoint and boundary-receipt playback
+plus isolated testing tools for Spectre. It consumes contracts owned by Spectre
+Ledger; it does not add an owner, scheduler, storage backend, or history
+subsystem to Spectre core.
 
 Lab plays back only checkpoints that Spectre actually persisted. Spectre may
 coalesce checkpoint writes, so Lab does **not** claim every runtime revision,
@@ -35,8 +35,8 @@ SPECTRE_PATH=../spectre SPECTRE_LEDGER_PATH=../spectre_ledger mix test
 ```
 
 Merely placing sibling repositories next to Lab does not replace its declared
-sources. Spectre is resolved from Hex; Ledger 0.1.0 and Lab 0.1.0 remain
-GitHub-only until their maintainers decide they are ready to publish.
+sources. Spectre is resolved from Hex; Ledger and Lab remain GitHub-only until
+their maintainers decide they are ready to publish.
 
 ## Verified checkpoint playback
 
@@ -75,7 +75,7 @@ absent from the persisted checkpoint chain.
 
 ## Boundary receipt playback
 
-Ledger 0.1.0 keeps receipt entries and envelope objects outside Bundle v1.
+Ledger keeps receipt entries and envelope objects outside Bundle v1.
 Fetch a complete chain through Ledger, then detach it into an offline Lab
 playback:
 
@@ -121,7 +121,7 @@ interceptor.
 
 ## Virtual streaming inference
 
-Exercise the real Spectre 0.3.2 streaming runtime without opening a provider
+Exercise the real Spectre streaming runtime without opening a provider
 connection:
 
 ```elixir
@@ -189,7 +189,7 @@ store =
 The adapter preserves Spectre's existing checkpoint-store normalization and
 ambiguity semantics; it does not invent a second persistence contract.
 
-The same controller can inject failures at the Spectre 0.3.2 receipt boundary:
+The same controller can inject failures at the Spectre receipt boundary:
 
 ```elixir
 receipt_sink =
