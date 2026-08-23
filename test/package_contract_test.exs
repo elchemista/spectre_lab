@@ -4,11 +4,11 @@ defmodule SpectreLab.PackageContractTest do
   alias Spectre.Stack.Conformance, as: StackConformance
   alias Spectre.Stack.Installable
 
-  test "package manifest composes Ledger against Spectre 0.3.2" do
+  test "package manifest composes Ledger against Spectre 0.3.3" do
     assert {:ok, package} = Installable.verify(Spectre.Lab)
     assert package.id == :spectre_lab
     assert package.version == "0.1.0"
-    assert package.spectre == "~> 0.3.2"
+    assert package.spectre == "~> 0.3.3"
     assert package.requires == [{:package, :spectre_ledger, "~> 0.1.0"}]
     assert package.agent_extensions == []
     assert package.operations == []
@@ -31,13 +31,13 @@ defmodule SpectreLab.PackageContractTest do
            }
 
     assert {:ok, report} = StackConformance.run([Spectre.Ledger, Spectre.Lab])
-    assert report.core_version == "0.3.2"
+    assert report.core_version == "0.3.3"
     assert report.package_count == 2
     assert Enum.map(report.packages, & &1.id) == [:spectre_ledger, :spectre_lab]
   end
 
   test "release versions and runtime applications exclude PostgreSQL" do
-    assert Spectre.version() == "0.3.2"
+    assert Spectre.version() == "0.3.3"
     assert Spectre.Ledger.version() == "0.1.0"
     assert Spectre.Lab.version() == "0.1.0"
 

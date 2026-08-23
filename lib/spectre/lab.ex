@@ -1,6 +1,6 @@
 defmodule Spectre.Lab do
   @moduledoc """
-  Verified offline evidence playback and testing tools for Spectre 0.3.2.
+  Verified offline evidence playback and testing tools for Spectre 0.3.3.
 
   Lab consumes checkpoint and boundary-receipt contracts owned by Spectre
   Ledger and supplies a deterministic streaming fixture adapter. It does not
@@ -12,7 +12,7 @@ defmodule Spectre.Lab do
     id: :spectre_lab,
     version: "0.1.0",
     contract: 1,
-    spectre: "~> 0.3.2",
+    spectre: "~> 0.3.3",
     requires: [{:package, :spectre_ledger, "~> 0.1.0"}],
     provides: [
       {:contract, {:spectre_lab, :checkpoint_playback, 1}},

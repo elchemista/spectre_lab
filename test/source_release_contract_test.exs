@@ -3,7 +3,7 @@ defmodule SpectreLab.SourceReleaseContractTest do
 
   @root Path.expand("..", __DIR__)
   @version "0.1.0"
-  @spectre_requirement "~> 0.3.2"
+  @spectre_requirement "~> 0.3.3"
   @ledger_repository "elchemista/spectre_ledger"
   @documentation_files ["README.md", "CHANGELOG.md", "SECURITY.md"] ++
                          Path.wildcard("docs/*.md", match_dot: true)

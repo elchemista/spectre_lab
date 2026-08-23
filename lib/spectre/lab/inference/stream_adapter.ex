@@ -18,7 +18,7 @@ defmodule Spectre.Lab.Inference.StreamAdapter do
 
   Observer messages contain lifecycle facts only; response text and failure
   payloads are never copied into them. The adapter implements bounded-fixture
-  and resume callbacks required by the Spectre 0.3.2 public contract.
+  and resume callbacks required by the Spectre 0.3.3 public contract.
   """
 
   @behaviour Spectre.Inference.StreamAdapter

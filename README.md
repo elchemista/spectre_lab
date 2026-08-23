@@ -15,7 +15,7 @@ effects.
 ```elixir
 def deps do
   [
-    {:spectre, "~> 0.3.2"},
+    {:spectre, "~> 0.3.3"},
     {:spectre_ledger,
      github: "elchemista/spectre_ledger",
      ref: "404858a4e1e91716a13219e87bf5308f3efd2395"},

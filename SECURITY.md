@@ -71,4 +71,4 @@ scope.
 ## Supported versions
 
 Security fixes are provided for the latest released Spectre Lab 0.1.x version
-while it remains compatible with Spectre 0.3.2 and Spectre Ledger 0.1.x.
+while it remains compatible with Spectre 0.3.3 and Spectre Ledger 0.1.x.

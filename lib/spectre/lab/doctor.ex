@@ -97,7 +97,7 @@ defmodule Spectre.Lab.Doctor do
          {:ok, ledger_package} <- Installable.verify(Ledger),
          true <- lab_package.version == Lab.version(),
          true <- ledger_package.version == Ledger.version(),
-         true <- version_matches?(Spectre.version(), "~> 0.3.2"),
+         true <- version_matches?(Spectre.version(), "~> 0.3.3"),
          true <- version_matches?(Ledger.version(), "~> 0.1.0"),
          true <- version_matches?(Lab.version(), "~> 0.1.0"),
          true <- application_version_matches?(:spectre_lab, Lab.version()) do
