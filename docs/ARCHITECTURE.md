@@ -110,7 +110,7 @@ lookup and content-addressed payload reconciliation paths to run unchanged.
 
 ## Dependency boundary
 
-Lab depends on Spectre `~> 0.3.2`, Spectre Ledger `~> 0.1.0`, and Jason. Ecto
+Lab depends on Spectre `~> 0.3.3`, Spectre Ledger `~> 0.1.0`, and Jason. Ecto
 SQL and Postgrex are neither direct nor required transitive dependencies. Lab
 does not select Ledger's optional PostgreSQL backend or supervise an Ecto Repo.
 Spectre resolves from Hex. Ledger remains an explicit, commit-pinned GitHub
