@@ -46,4 +46,37 @@ defmodule Spectre.Lab.ServerToolTest do
     assert {:error, :not_a_server_checkpoint} =
              ServerTool.invoke(:inspect, %{snapshot: encoded}, %{})
   end
+
+  @tag :tmp_dir
+  test "logical inspection reads only the trusted current checkpoint inside the worker", %{
+    tmp_dir: dir
+  } do
+    store = start_supervised!({Spectre.Ledger.ServerStore, path: Path.join(dir, "lab.ledger")})
+
+    snapshot = %{
+      version: 1,
+      pending: %{},
+      inbox: %{},
+      outbox: %{},
+      sequence: 7,
+      assigns: %{secret: "private snapshot payload"}
+    }
+
+    {:ok, encoded} = Spectre.Server.Checkpoint.encode_value(snapshot)
+    {:ok, 1} = Spectre.Ledger.ServerStore.put_new(store, :current, encoded)
+
+    context = %{
+      checkpoint_ref: %{adapter: Spectre.Ledger.ServerStore, store: store, key: :current}
+    }
+
+    assert {:ok, %{scope: :current} = args} = ServerTool.prepare(:inspect, [:checkpoint], %{})
+    refute inspect(args) =~ "private"
+    assert {:ok, %{sequence: 7} = summary} = ServerTool.invoke(:inspect, args, context)
+    refute inspect(summary) =~ "private"
+
+    assert {:error, :invalid_lab_request} =
+             ServerTool.prepare(:inspect, [{:checkpoint, :other}], %{})
+
+    assert {:error, :server_checkpoint_required} = ServerTool.invoke(:inspect, args, %{})
+  end
 end

@@ -233,12 +233,18 @@ registration contract. Install the package in the Agent's Stack and use
 creates helpers; this package does not export functions to import into the
 Server. Tool results arrive through `on_result` after durable acquisition.
 
-`lab(ctx, {:inspect, checkpoint_bytes}, on_result: :inspection)` checks the
-real core checkpoint codec and returns a bounded summary of pending/inbox/outbox
-counts. It neither restores an owner nor performs I/O. `codec_valid: true` is
-not authentication or a valid-definition claim: those checks remain the
-AgentServer loader's responsibility. Payloads and assigns are not returned in
-the inspection summary. Existing legacy archive playback APIs remain available.
+`lab(ctx, {:inspect, :checkpoint}, on_result: :inspection)` resolves the
+current Server checkpoint from its trusted runtime reference and decodes it
+inside the worker. Only pending/inbox/outbox counts and bounded metadata enter
+the inbox; checkpoint bytes never become the preceding tool's result or a
+nested checkpoint copy. Tool input cannot select another store or conversation.
+An explicit canonical binary remains accepted for offline input inspection,
+subject to the helper's 1 MiB request limit.
+
+`codec_valid: true` proves codec validity, not authentication or a valid-definition
+claim: those checks remain the AgentServer loader's responsibility. The tool never
+restores an owner or executes its effects. Payloads and assigns are not returned.
+Existing legacy archive playback APIs remain available.
 
 For local integration tests set `SPECTRE_PATH=../spectre` and `SPECTRE_LEDGER_PATH=../spectre_ledger`; the core branch is
 `feature/agent-server-gam`. No transport credentials are needed for fixture tests.

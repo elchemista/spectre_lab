@@ -2,6 +2,8 @@
 
 ## Unreleased — Spectre 0.4
 
+- Inspect the current checkpoint through a trusted logical reference without copying its bytes into a tool result.
+
 - Add bounded canonical AgentServer snapshot inspection without executing or trusting restored identity.
 - Require Spectre `~> 0.4.0`; retain legacy APIs where applicable.
 

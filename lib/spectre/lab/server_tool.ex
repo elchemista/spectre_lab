@@ -1,6 +1,6 @@
 defmodule Spectre.Lab.ServerTool do
   @moduledoc """
-  Offline inspection of an AgentServer checkpoint's canonical representation.
+  Inspection of the current AgentServer checkpoint or explicit canonical input.
 
   Decoding proves codec validity only. The runtime separately validates the
   definition fingerprint, identity and recovery invariants before loading it.
@@ -15,17 +15,33 @@ defmodule Spectre.Lab.ServerTool do
         contract: 1,
         adapter: __MODULE__,
         default: nil,
-        operations: %{inspect: %{path: :cognitive, retry: :safe, max_bytes: 16_777_216}}
+        operations: %{inspect: %{path: :cognitive, retry: :safe, max_bytes: 1_048_576}}
       }
     }
   end
+
+  def prepare(:inspect, [:checkpoint], _trusted), do: {:ok, %{scope: :current}}
 
   def prepare(:inspect, [encoded], _trusted) when is_binary(encoded),
     do: {:ok, %{snapshot: encoded}}
 
   def prepare(_, _, _), do: {:error, :invalid_lab_request}
 
-  def invoke(:inspect, %{snapshot: snapshot}, _context) do
+  def invoke(:inspect, %{scope: :current}, %{
+        checkpoint_ref: %{adapter: adapter, store: store, key: key}
+      }) do
+    case adapter.fetch(store, key) do
+      {:ok, %{value: snapshot}} when is_binary(snapshot) -> inspect_snapshot(snapshot)
+      :not_found -> {:error, :checkpoint_not_found}
+      {:error, _} = error -> error
+      _ -> {:error, :not_a_server_checkpoint}
+    end
+  end
+
+  def invoke(:inspect, %{scope: :current}, _context), do: {:error, :server_checkpoint_required}
+  def invoke(:inspect, %{snapshot: snapshot}, _context), do: inspect_snapshot(snapshot)
+
+  defp inspect_snapshot(snapshot) do
     with {:ok, projection} <- Checkpoint.decode_snapshot(snapshot),
          true <- is_map(projection) and not is_struct(projection),
          true <- Enum.all?([:outbox, :inbox, :pending], &is_map(Map.get(projection, &1))),
