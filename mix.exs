@@ -87,9 +87,12 @@ defmodule SpectreLab.MixProject do
   defp docs do
     [
       main: "readme",
-      source_ref: @version,
+      source_ref: "feature/stack-tools-0.4",
       extras: [
         "README.md",
+        "docs/SPECTRE_0_4.md",
+        "docs/MIGRATING_TO_0_4.md",
+        "docs/ARCHIVE_PLAYBACK.md",
         "CHANGELOG.md",
         "SECURITY.md",
         "docs/ARCHITECTURE.md",

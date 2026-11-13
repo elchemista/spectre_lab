@@ -1,5 +1,9 @@
 # Architecture
 
+[Current README](../README.md) · [AgentServer 0.4](SPECTRE_0_4.md) · [Migration](MIGRATING_TO_0_4.md)
+
+Bundle, receipt playback and harness contracts below are retained Instance/offline APIs. AgentServer inspection has a distinct canonical format and trusted current-checkpoint reference.
+
 Spectre Lab is an offline consumer and test toolkit around contracts already
 owned by Spectre and Spectre Ledger. It adds no history records, scheduler,
 runtime owner, checkpoint format, storage backend, or replay engine to core.
@@ -110,9 +114,10 @@ lookup and content-addressed payload reconciliation paths to run unchanged.
 
 ## Dependency boundary
 
-Lab depends on Spectre `~> 0.3.3`, Spectre Ledger `~> 0.1.0`, and Jason. Ecto
+Lab targets Spectre `~> 0.4.0`, Spectre Ledger `~> 0.1.0`, and Jason. Ecto
 SQL and Postgrex are neither direct nor required transitive dependencies. Lab
 does not select Ledger's optional PostgreSQL backend or supervise an Ecto Repo.
-Spectre resolves from Hex. Ledger remains an explicit, commit-pinned GitHub
-dependency until its maintainer publishes version 0.1.0; an adjacent checkout
-is selected only through `SPECTRE_LEDGER_PATH`.
+The default manifests retain a Spectre Hex requirement and pinned Ledger Git
+source; these are not a claim that core 0.4 is published. Use the README matching
+Git overrides for this unreleased integration. Local contributors explicitly set
+`SPECTRE_PATH` and `SPECTRE_LEDGER_PATH` to their matching checkouts.

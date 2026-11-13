@@ -1,11 +1,22 @@
 defmodule Spectre.Lab do
   @moduledoc """
-  Verified offline evidence playback and testing tools for Spectre 0.3.3.
+  AgentServer checkpoint inspection and verified offline evidence playback.
 
-  Lab consumes checkpoint and boundary-receipt contracts owned by Spectre
-  Ledger and supplies a deterministic streaming fixture adapter. It does not
-  add an owner, scheduler, storage backend, or live execution replay to
-  Spectre.
+  In Spectre 0.4, install Lab alongside Ledger in a Stack and select it with
+  `use Spectre.Server, tools: MyApp.AI`. The generated private
+  `lab(ctx, {:inspect, :checkpoint}, opts)` helper resolves the current Server's
+  trusted checkpoint in a worker and returns a bounded structural summary.
+  Raw snapshots are not copied into the Server inbox. Codec validity is not a
+  recovery identity check or permission to execute an action.
+
+  Lab adds no owner, scheduler, storage backend or live execution replay.
+  Installation grants no authority; GAM remains responsible for the host's governed
+  surface. See the [0.4 integration guide](SPECTRE_0_4.md) and the
+  [Governed Act Model](https://spectre.guide/en/governed-act-model).
+
+  The separate offline APIs consume Ledger's legacy checkpoint/receipt archives
+  and provide a deterministic streaming fixture adapter. Those archive contracts
+  are not AgentServer checkpoint files.
   """
 
   use Spectre.Stack.Installable,

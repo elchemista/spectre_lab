@@ -1,250 +1,104 @@
 # Spectre Lab
 
-Spectre Lab provides verified offline checkpoint and boundary-receipt playback
-plus isolated testing tools for Spectre. It consumes contracts owned by Spectre
-Ledger; it does not add an owner, scheduler, storage backend, or history
-subsystem to Spectre core.
+Lab provides inspection and testing tools for Spectre. Its Spectre 0.4 helper
+inspects the **current AgentServer checkpoint** inside a worker and returns a
+bounded summary. It does not restore an agent, infer authority from saved data,
+or replay external effects.
 
-Lab plays back only checkpoints that Spectre actually persisted. Spectre may
-coalesce checkpoint writes, so Lab does **not** claim every runtime revision,
-deterministic execution replay, or reproduction of model and external side
-effects.
+Standalone tools remain available for verified Instance checkpoint/receipt bundle
+playback, comparison, reports and isolated harnesses. Those archive formats are
+separate from AgentServer canonical snapshots; neither feature reconstructs
+execution that was never recorded.
 
-## Installation
+## Installation on the 0.4 development branch
+
+This branch targets the **unreleased Spectre 0.4 architecture**. Use matching Git
+branches; the examples do not assume that Spectre 0.4 is available from Hex.
+For reproducible deployments, replace branch selectors with reviewed commit refs.
 
 ```elixir
 def deps do
   [
-    {:spectre, "~> 0.4.0"},
-    {:spectre_ledger,
-     github: "elchemista/spectre_ledger",
-     ref: "404858a4e1e91716a13219e87bf5308f3efd2395"},
-    {:spectre_lab, github: "elchemista/spectre_lab", branch: "main", only: [:dev, :test]}
+    {:spectre, github: "elchemista/spectre",
+     branch: "feature/agent-server-gam", override: true},
+    {:spectre_ledger, github: "elchemista/spectre_ledger",
+     branch: "feature/stack-tools-0.4", override: true},
+    {:spectre_lab, github: "elchemista/spectre_lab",
+     branch: "feature/stack-tools-0.4"}
   ]
 end
 ```
 
-Lab has no PostgreSQL runtime. Ecto SQL and Postgrex are not required by Lab,
-and loading a bundle never opens a Ledger backend or starts a Repo.
+The manifest requirement `{:spectre, "~> 0.4.0"}` describes compatibility, not
+publication availability. Local contributors can use `SPECTRE_PATH=../spectre` and
+`SPECTRE_LEDGER_PATH=../spectre_ledger` for this repository's dependency override.
 
-During development against adjacent checkouts, opt in to each path explicitly:
+The dependency example includes Lab at runtime because the Server below installs
+its helper. Applications using only offline testing can instead restrict Lab to
+`only: [:dev, :test]`; do not use that restriction when production code installs it.
 
-```console
-SPECTRE_PATH=../spectre SPECTRE_LEDGER_PATH=../spectre_ledger mix deps.get
-SPECTRE_PATH=../spectre SPECTRE_LEDGER_PATH=../spectre_ledger mix test
-```
-
-Merely placing sibling repositories next to Lab does not replace its declared
-sources. Spectre is resolved from Hex; Ledger and Lab remain GitHub-only until
-their maintainers decide they are ready to publish.
-
-## Verified checkpoint playback
+## Inspect the current checkpoint
 
 ```elixir
-bundle = File.read!("test/fixtures/account-checkpoints.json")
+defmodule MyApp.AI do
+  use Spectre.Stack
+  install Spectre.Ledger
+  install Spectre.Lab
+end
 
-{:ok, playback} = Spectre.Lab.load(bundle)
-[1, 4] = Spectre.Lab.Playback.revisions(playback)
-{:ok, frame} = Spectre.Lab.Playback.fetch(playback, 4)
-checkpoint_bytes = frame.checkpoint
-capture = Spectre.Lab.Playback.completeness(playback)
-```
+defmodule MyApp.SupportServer do
+  use Spectre.Server, tools: MyApp.AI
 
-`Spectre.Lab.load/2` delegates decoding and integrity verification to
-`Spectre.Ledger.Bundle`. Frames retain opaque checkpoint bytes and verified
-Ledger identities; Lab production code does not decode `Spectre.Instance`
-Canonical internals or restore executable Runs. Loading also forces Ledger
-Bundle telemetry off, including the global `:telemetry` sink; callers may pass
-only the documented Bundle resource-limit options.
+  def handle_flow({:support, :inspect}, _input, ctx),
+    do: lab(ctx, {:inspect, :checkpoint}, on_result: :inspection)
 
-Bundle v1 is a trusted/local artifact boundary. Spectre Foundation decoding
-may load an existing module named by a valid checkpoint, so do not pass
-arbitrary untrusted bundles to Lab in an application node. See
-[Security](SECURITY.md) for the operational boundary.
+  def handle_result(:inspection, {:ok, summary}, ctx) do
+    respond(ctx, "Pending: #{summary.pending}; inbox: #{summary.inbox}; outbox: #{summary.outbox}")
+  end
 
-Two playbacks for the same stream can be compared by verified checkpoint
-identity:
+  def handle_result(tag, result, ctx), do: super(tag, result, ctx)
+end
 
-```elixir
-{:ok, report} = Spectre.Lab.diff(before_playback, after_playback)
-```
-
-The completeness map reports persisted revisions and gaps explicitly. A gap is
-not inferred execution history; it only says that intermediate revisions are
-absent from the persisted checkpoint chain.
-
-## Boundary receipt playback
-
-Ledger keeps receipt entries and envelope objects outside Bundle v1.
-Fetch a complete chain through Ledger, then detach it into an offline Lab
-playback:
-
-```elixir
-{:ok, entries} = Spectre.Ledger.receipt_entries(instance_ref, ledger_opts)
-{:ok, envelopes} = Spectre.Ledger.receipts(instance_ref, ledger_opts)
-
-{:ok, receipts} = Spectre.Lab.load_receipts(entries, envelopes)
-[1, 2, 3] = Spectre.Lab.ReceiptPlayback.sequences(receipts)
-terminal = Spectre.Lab.ReceiptPlayback.by_kind(receipts, :inference_attempt_terminal)
-```
-
-Loading performs no backend access. Lab re-verifies the complete physical
-entry chain and every entry/envelope binding, hashes the stream key in its
-verification report, and preserves physical append order. Its completeness
-map reports separately whether canonical revisions were ordered and whether
-state digests were present. It never claims every revision, deterministic
-replay, or exactly-once external effects.
-
-Lab deliberately does not define a receipt bundle format. Until Ledger owns
-one, callers must protect the in-memory entries and confidential envelopes and
-must not treat two independently paginated queries as a complete chain.
-
-## ExUnit test case
-
-```elixir
-defmodule MyApp.AccountPlaybackTest do
-  use Spectre.Lab.TestCase, async: true
-
-  test "keeps live I/O closed", %{io_fuse: io_fuse} do
-    assert {:error, :live_io_blocked} =
-             Spectre.Lab.IOFuse.dispatch(io_fuse, fn -> :network_call end)
-
-    assert :ok = assert_no_live_io(io_fuse, fn -> :ok end)
+defmodule MyApp.SupportAgent do
+  use Spectre.Agent, stack: MyApp.AI, server: MyApp.SupportServer
+  flow :support do
+    on :inspect, regex: ~r/^inspect$/i
   end
 end
+
+{:ok, store} = Spectre.Ledger.ServerStore.start_link(path: "data/support.ledger")
+{:ok, server} = Spectre.Server.start_link(
+  agent: MyApp.SupportAgent,
+  checkpoint: {Spectre.Ledger.ServerStore, store, {:support, "conversation-42"}},
+  consumer: self())
+{:ok, interaction} = Spectre.Server.input(server, "inspect")
 ```
 
-Each case receives an unregistered, caller-supervised sandbox and a closed
-`Spectre.Lab.IOFuse`. The fuse gates only work explicitly routed through
-`IOFuse.dispatch/2`; it is not a universal network, file, process, or adapter
-interceptor.
+The runtime supplies the actual checkpoint reference directly to the worker.
+Tool input cannot choose another store or conversation. The worker decodes the
+snapshot and projects counts, version, sequence and fingerprint presence;
+checkpoint bytes and assigns never become its result. `codec_valid: true` proves
+codec validity, not authentication or compatibility with the currently running Agent.
 
-## Virtual streaming inference
-
-Exercise the real Spectre streaming runtime without opening a provider
-connection:
+## Offline archive playback remains separate
 
 ```elixir
-script =
-  Spectre.Lab.Inference.StreamScript.text!("hello from the fixture",
-    chunk_size: 4
-  )
-
-{:ok, stream} =
-  Spectre.stream(instance, "stream this",
-    model: MyApp.TestModel,
-    plan_actions?: false,
-    stream_adapter: Spectre.Lab.Inference.StreamAdapter,
-    stream_adapter_opts: [script: script, observer: self()]
-  )
-
-events = Enum.to_list(stream)
+{:ok, playback} = Spectre.Lab.load(File.read!("test/fixtures/instance-bundle.json"))
+revisions = Spectre.Lab.Playback.revisions(playback)
+{:ok, frame} = Spectre.Lab.Playback.fetch(playback, List.last(revisions))
 ```
 
-The adapter is lazy and pull-driven: one consumer demand schedules at most one
-scripted transport item in the real session mailbox. Scripts may contain
-provider-event batches, `:stall`, or `{:transport_error, reason}` and can split
-UTF-8 codepoints exactly like network chunks. Early Enumerable termination
-goes through the normal provider cancellation path. The test model is still
-needed for immutable selection identity, but its synchronous `complete/2`
-callback is never used.
+This is the retained Instance Bundle API, not an AgentServer restart operation.
+Bundle verification/playback preserves its existing trusted-artifact boundary:
+Foundation decoding may load existing modules named in a checkpoint. Use the
+[archive guide](docs/ARCHIVE_PLAYBACK.md) and [security guidance](SECURITY.md).
+An explicitly supplied canonical binary is also accepted by the AgentServer
+inspection helper for offline input, with its 1 MiB request budget.
 
-This is deterministic fixture delivery, not deterministic replay of a prior
-model call. Restart support resumes only from the explicit
-`{:spectre_lab, consumed_items}` cursor stamped on delivered fixture batches.
+## Documentation
 
-Generate a safe starter test with:
-
-```console
-mix spectre_lab.gen.test MyApp.AccountPlaybackTest
-mix spectre_lab.gen.test MyApp.AccountPlaybackTest --path test/contracts --dry-run
-```
-
-The generator refuses implicit overwrites, absolute or escaping paths, and
-symlinked destination parents.
-
-## Fault injection
-
-`Spectre.Lab.Fault.CheckpointStore` wraps the existing public
-`Spectre.Instance.CheckpointStore` boundary. A caller-owned controller consumes
-a deterministic FIFO script without timers or global registration:
-
-```elixir
-{:ok, controller} =
-  Spectre.Lab.Fault.Controller.start_link(
-    script: %{
-      compare_and_swap: [
-        {:fail_before, :unavailable},
-        {:commit_then_return, {:error, {:ambiguous, :lost_ack}}}
-      ]
-    }
-  )
-
-store =
-  {Spectre.Lab.Fault.CheckpointStore,
-   controller: controller,
-   delegate: {MyCheckpointStore, namespace: "test"}}
-```
-
-The adapter preserves Spectre's existing checkpoint-store normalization and
-ambiguity semantics; it does not invent a second persistence contract.
-
-The same controller can inject failures at the Spectre receipt boundary:
-
-```elixir
-receipt_sink =
-  {Spectre.Lab.Fault.ReceiptSink,
-   controller: controller,
-   delegate: {MyReceiptSink, namespace: "test"}}
-```
-
-Use the operation keys `:receipt_append`, `:receipt_lookup`,
-`:receipt_put_payload`, and `:receipt_get_payload`. Append and payload staging
-support committed-but-ambiguous replies, so tests can exercise idempotent
-lookup, payload reconciliation, and required-receipt recovery through the same
-public contract used in production.
-
-## Diagnostics
-
-```console
-mix spectre_lab.doctor
-mix spectre_lab.doctor --bundle test/fixtures/account-checkpoints.json --strict
-mix spectre_lab.doctor --format json
-mix spectre_lab.bundle.verify test/fixtures/account-checkpoints.json --format json
-```
-
-Doctor composes the public Spectre Doctor and Stack conformance contracts and
-checks the checkpoint and boundary-receipt playback capabilities. It does not
-start resources or access a Ledger backend. Bundle file access belongs to the
-Mix tasks and is bounded to 64 MiB.
-
-See [Architecture](docs/ARCHITECTURE.md), [Testing](docs/TESTING.md), and the
-normative [Public API](docs/PUBLIC_API.md).
-
-## License
-
-Apache-2.0. See the repository `LICENSE` file.
-
-## AgentServer / Spectre 0.4
-
-This branch implements the optional `Spectre.Stack.Installable.tools/1`
-registration contract. Install the package in the Agent's Stack and use
-`use Spectre.Server, tools: MyApp.AI` in the separate Server module. The core
-creates helpers; this package does not export functions to import into the
-Server. Tool results arrive through `on_result` after durable acquisition.
-
-`lab(ctx, {:inspect, :checkpoint}, on_result: :inspection)` resolves the
-current Server checkpoint from its trusted runtime reference and decodes it
-inside the worker. Only pending/inbox/outbox counts and bounded metadata enter
-the inbox; checkpoint bytes never become the preceding tool's result or a
-nested checkpoint copy. Tool input cannot select another store or conversation.
-An explicit canonical binary remains accepted for offline input inspection,
-subject to the helper's 1 MiB request limit.
-
-`codec_valid: true` proves codec validity, not authentication or a valid-definition
-claim: those checks remain the AgentServer loader's responsibility. The tool never
-restores an owner or executes its effects. Payloads and assigns are not returned.
-Existing legacy archive playback APIs remain available.
-
-For local integration tests set `SPECTRE_PATH=../spectre` and `SPECTRE_LEDGER_PATH=../spectre_ledger`; the core branch is
-`feature/agent-server-gam`. No transport credentials are needed for fixture tests.
+- [AgentServer integration, helpers and authority](docs/SPECTRE_0_4.md)
+- [Migration from the 0.3 integration](docs/MIGRATING_TO_0_4.md)
+- [Standalone and retained runtime reference](docs/ARCHIVE_PLAYBACK.md)
+- [Public API](docs/PUBLIC_API.md) and [changelog](CHANGELOG.md)
+- [Governed Act Model](https://spectre.guide/en/governed-act-model) and [core tool lifecycle](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/STACK_TOOLS.md)

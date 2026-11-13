@@ -2,6 +2,8 @@
 
 ## Unreleased — Spectre 0.4
 
+- Rewrite the README around standalone use and Stack → Agent → Server integration; add lifecycle/GAM, migration and explicitly scoped retained-runtime guides to ExDoc.
+
 - Inspect the current checkpoint through a trusted logical reference without copying its bytes into a tool result.
 
 - Add bounded canonical AgentServer snapshot inspection without executing or trusting restored identity.
