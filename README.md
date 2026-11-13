@@ -15,7 +15,7 @@ effects.
 ```elixir
 def deps do
   [
-    {:spectre, "~> 0.3.3"},
+    {:spectre, "~> 0.4.0"},
     {:spectre_ledger,
      github: "elchemista/spectre_ledger",
      ref: "404858a4e1e91716a13219e87bf5308f3efd2395"},
@@ -224,3 +224,21 @@ normative [Public API](docs/PUBLIC_API.md).
 ## License
 
 Apache-2.0. See the repository `LICENSE` file.
+
+## AgentServer / Spectre 0.4
+
+This branch implements the optional `Spectre.Stack.Installable.tools/1`
+registration contract. Install the package in the Agent's Stack and use
+`use Spectre.Server, tools: MyApp.AI` in the separate Server module. The core
+creates helpers; this package does not export functions to import into the
+Server. Tool results arrive through `on_result` after durable acquisition.
+
+`lab(ctx, {:inspect, checkpoint_bytes}, on_result: :inspection)` checks the
+real core checkpoint codec and returns a bounded summary of pending/inbox/outbox
+counts. It neither restores an owner nor performs I/O. `codec_valid: true` is
+not authentication or a valid-definition claim: those checks remain the
+AgentServer loader's responsibility. Payloads and assigns are not returned in
+the inspection summary. Existing legacy archive playback APIs remain available.
+
+For local integration tests set `SPECTRE_PATH=../spectre` and `SPECTRE_LEDGER_PATH=../spectre_ledger`; the core branch is
+`feature/agent-server-gam`. No transport credentials are needed for fixture tests.

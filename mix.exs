@@ -39,7 +39,7 @@ defmodule SpectreLab.MixProject do
   end
 
   defp spectre_dep do
-    dependency(:spectre, "SPECTRE_PATH", "~> 0.3.3")
+    dependency(:spectre, "SPECTRE_PATH", "~> 0.4.0")
   end
 
   defp ledger_dep do

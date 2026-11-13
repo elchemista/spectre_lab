@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Spectre 0.4
+
+- Add bounded canonical AgentServer snapshot inspection without executing or trusting restored identity.
+- Require Spectre `~> 0.4.0`; retain legacy APIs where applicable.
+
 All notable changes to Spectre Lab are documented here.
 
 ## 0.1.0

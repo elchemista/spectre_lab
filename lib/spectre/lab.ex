@@ -12,7 +12,7 @@ defmodule Spectre.Lab do
     id: :spectre_lab,
     version: "0.1.0",
     contract: 1,
-    spectre: "~> 0.3.3",
+    spectre: "~> 0.4.0",
     requires: [{:package, :spectre_ledger, "~> 0.1.0"}],
     provides: [
       {:contract, {:spectre_lab, :checkpoint_playback, 1}},
@@ -40,6 +40,9 @@ defmodule Spectre.Lab do
   alias Spectre.Receipt.Envelope
 
   @version "0.1.0"
+
+  @impl Spectre.Stack.Installable
+  def tools(config), do: Spectre.Lab.ServerTool.tools(config)
 
   @doc "Returns the Lab package version."
   @spec version() :: String.t()
