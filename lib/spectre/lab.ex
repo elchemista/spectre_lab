@@ -9,6 +9,16 @@ defmodule Spectre.Lab do
   Raw snapshots are not copied into the Server inbox. Codec validity is not a
   recovery identity check or permission to execute an action.
 
+  `lab(ctx, {:inspect, :checkpoint, :operational}, opts)` returns the core's
+  versioned metadata projection for that same checkpoint. The interaction form
+  `lab(ctx, {:inspect, :interaction, interaction_id}, opts)` correlates retained
+  checkpoint facts and explicitly reports incomplete historical coverage.
+  Neither helper can select another Skill's checkpoint or read its GAM facts.
+
+  Developer-facing `inspect/2` and `trace/2` delegate directly to the Server's
+  authenticated diagnostic APIs. The actual calling process remains the caller
+  evaluated by the Server; choosing a mode does not grant diagnostic authority.
+
   Lab adds no owner, scheduler, storage backend or live execution replay.
   Installation grants no authority; GAM remains responsible for the host's governed
   surface. See the [0.4 integration guide](SPECTRE_0_4.md) and the
@@ -58,6 +68,30 @@ defmodule Spectre.Lab do
   @doc "Returns the Lab package version."
   @spec version() :: String.t()
   def version, do: @version
+
+  @doc """
+  Inspects a running Server through its authorized operational diagnostic API.
+
+  The root consumer may inspect its runtime; detailed access is decided by the
+  Server, not by Lab or the supplied mode. Options are the closed options accepted
+  by `Spectre.Server.inspect/2`. This call creates no worker or persistent owner.
+  """
+  @spec inspect(GenServer.server(), :operational, keyword()) :: {:ok, map()} | {:error, term()}
+  def inspect(server, mode, opts \\ [])
+
+  def inspect(server, :operational, opts), do: Spectre.Server.inspect(server, opts)
+  def inspect(_server, _mode, _opts), do: {:error, :invalid_lab_inspection_mode}
+
+  @doc """
+  Correlates recorded interaction facts through the Server's authorized trace API.
+
+  The returned coverage describes available evidence and retained history; Lab
+  does not synthesize missing events, reconstruct model reasoning or execute any
+  operation. Options are those accepted by `Spectre.Server.trace/3`.
+  """
+  @spec trace(GenServer.server(), String.t(), keyword()) :: {:ok, map()} | {:error, term()}
+  def trace(server, interaction_id, opts \\ []),
+    do: Spectre.Server.trace(server, interaction_id, opts)
 
   @doc """
   Loads a verified Ledger bundle for offline checkpoint playback.

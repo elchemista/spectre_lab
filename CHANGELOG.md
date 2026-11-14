@@ -1,5 +1,16 @@
 # Changelog
 
+## Core 0.4 diagnostic extension (unreleased)
+
+- Add explicit summary, redacted operational and retained-interaction checkpoint
+  inspection through the core's versioned diagnostic projection.
+- Add `Spectre.Lab.inspect/3` and `trace/3` for authorized developer callers,
+  preserving their process identity when delegating to the Server APIs.
+- Preserve the original checkpoint summary and own-Skill access boundary. Trace
+  coverage explicitly distinguishes retained facts from missing historical data.
+- Develop on `feature/diagnostics-0.4`; the core compatibility line and Lab's
+  independent package version remain distinct.
+
 ## Unreleased — Spectre 0.4
 
 - Rewrite the README around standalone use and Stack → Agent → Server integration; add lifecycle/GAM, migration and explicitly scoped retained-runtime guides to ExDoc.

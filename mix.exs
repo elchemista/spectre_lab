@@ -87,7 +87,7 @@ defmodule SpectreLab.MixProject do
   defp docs do
     [
       main: "readme",
-      source_ref: "feature/stack-tools-0.4",
+      source_ref: "feature/diagnostics-0.4",
       extras: [
         "README.md",
         "docs/SPECTRE_0_4.md",

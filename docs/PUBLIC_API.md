@@ -28,9 +28,15 @@ application's compiled BEAM surface.
 ## AgentServer inspection contract
 
 The generated `lab/3` helper belongs to the Server, not to this facade. Its logical
-checkpoint form reads only the current Server snapshot inside its worker and projects
-counts; it does not restore a process or return saved payloads. `tools/1` registers
-this contract through the Stack. See [the helper guide](SPECTRE_0_4.md).
+checkpoint form reads only the current Server snapshot inside its worker. The
+original summary is unchanged; explicit operational and interaction forms use
+the core's versioned, redacted diagnostic projections. They do not restore a
+process, return saved payloads, inspect sibling Skills or grant GAM access.
+`tools/1` registers this contract through the Stack.
+
+The facade's `inspect/3` and `trace/3` delegate directly to the core's authorized
+developer APIs, preserving the actual caller. Coverage metadata identifies
+retained facts and missing history. See [the helper guide](SPECTRE_0_4.md).
 
 ## Manifest
 
@@ -38,7 +44,7 @@ this contract through the Stack. See [the helper guide](SPECTRE_0_4.md).
 - `Mix.Tasks.SpectreLab.Doctor`
 - `Mix.Tasks.SpectreLab.Gen.Test`
 - `Spectre.Lab`
-  - functions: `tools/1`, `version/0`, `load/1`, `load/2`, `load_receipts/2`, `diff/2`
+  - functions: `tools/1`, `version/0`, `inspect/2`, `inspect/3`, `trace/2`, `trace/3`, `load/1`, `load/2`, `load_receipts/2`, `diff/2`
 - `Spectre.Lab.Diff`
   - functions: `compare/2`
 - `Spectre.Lab.Diff.Report`

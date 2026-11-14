@@ -3,7 +3,9 @@
 This guide targets the current unreleased development branch, not a published
 Hex release. Start with the matching Git dependencies in the [README](../README.md).
 The package's compatibility requirement is Spectre `~> 0.4.0`; use the core
-`feature/agent-server-gam` and satellite `feature/stack-tools-0.4` branches together.
+`feature/agent-server-gam`, Ledger `feature/stack-tools-0.4` and Lab
+`feature/diagnostics-0.4` branches together. Lab's own package version is independent
+of the core compatibility line; use reviewed commit refs for reproducibility.
 
 ## Move ownership, preserve capabilities
 
@@ -13,6 +15,8 @@ The package's compatibility requirement is Spectre `~> 0.4.0`; use the core
 | Fetch a checkpoint blob via Ledger, then pass it through Lab | Use `{:inspect, :checkpoint}`; bytes stay inside the worker |
 | Successful decoding treated as permission to restore | Loader still validates identity/fingerprint/recovery; GAM still owns authority |
 | Lab always scoped to dev/test dependency only | Use runtime dependency when production AgentServer installs the Lab helper |
+| Custom code decoding checkpoint internals for an inspector | Use `{:inspect, :checkpoint, :operational}` for own-checkpoint metadata |
+| Checkpoint inspection assumed to contain a complete history | Use the interaction trace and check its explicit coverage/missing-history fields |
 
 1. Keep the Stack installation and supported provider/configuration choices.
    Change any dependency pins to the matching branches or reviewed commits.
@@ -21,7 +25,7 @@ The package's compatibility requirement is Spectre `~> 0.4.0`; use the core
 3. Return the context containing generated helper commands. Handle actual tagged
    results in `handle_result/3`; there is no synchronous helper result and no import
    of invented <code>Spectre.Lab.lab/3</code> functions.
-4. For consequential work, configure real host GAM bindings/executors and consent
+4. For consequential work, configure AgentServer allowed operations and consent
    continuations where required. Installing a package does not authorize end-user
    effects. Follow the [GAM manifest](https://spectre.guide/en/governed-act-model).
 5. Choose and supervise the actual runtime resources and checkpoint Store. Keep
@@ -32,9 +36,30 @@ The package's compatibility requirement is Spectre `~> 0.4.0`; use the core
 
 ## What remains available
 
+The original `{:inspect, :checkpoint}` summary is unchanged. New helper modes
+remain scoped to the caller's trusted checkpoint; choosing a mode cannot inspect
+the root or another Skill. For authorized developer inspection, use
+`Spectre.Lab.inspect(server, :operational)` or
+`Spectre.Lab.trace(server, interaction_id)` from the authenticated application
+consumer. These preserve caller identity and delegate access decisions and
+versioned projection to the core. They do not replace GAM or add a second journal.
+
 Lab retains offline Instance bundle and boundary-receipt playback, reports and isolated harnesses. Those formats are separate from AgentServer canonical snapshot inspection. Playback never manufactures missing execution history or replays external effects.
 
 See the [retained reference](ARCHIVE_PLAYBACK.md) for these APIs and
 [0.4 helper/lifecycle contracts](SPECTRE_0_4.md) for the new integration. Migration
 is an ownership/API change, not a promise that every legacy convenience now
 implicitly routes through AgentServer or GAM.
+
+## Skill Servers and the shared GAM
+
+A mounted Skill may have a separate Server, state and checkpoint. It automatically
+reuses the root AgentServer's GAM Domain, authority ledger and execution boundary;
+no Skill Host, second Domain or manual ingress is part of this migration. Keep
+root operation permissions and mount `governed:` references aligned. Proposal
+provenance remains recorded, confirmations stay bound to the exact Skill and
+presentation, and timer closure cannot erase a Duty. Parallel workers remain
+subject to the same kernel admission laws.
+
+See [the package integration guide](SPECTRE_0_4.md#mounted-skill-runtimes) and the
+[core Skill ownership and consent contract](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/SKILLS.md).

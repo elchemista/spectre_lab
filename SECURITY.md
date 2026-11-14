@@ -60,6 +60,18 @@ the public Stream events intentionally contain the scripted response text.
 
 ## Diagnostics and dependencies
 
+AgentServer helpers receive their current checkpoint reference from the core,
+not from tool input. Operational mode does not permit selecting a different Skill
+or reading the Agent's shared GAM ledger. Core diagnostic projections expose
+bounded allowlisted metadata, not raw checkpoint contents or saved errors.
+
+Developer `Spectre.Lab.inspect/3` and `trace/3` calls preserve the actual caller
+when delegating to the Server's authenticated APIs. They do not create a worker
+that impersonates a configured consumer. A diagnostic mode is not a credential;
+the Server decides whether state and GAM records can be read. A shared GAM Domain
+does not imply unrestricted cross-Skill access. Coverage gaps are returned as
+gaps, not treated as proof that an operation never occurred.
+
 Lab Doctor is read-only and does not open a Ledger backend. Mix tasks read only
 the explicitly supplied bundle path, cap input at 64 MiB, and avoid echoing
 bundle contents or paths in stable failure messages.
@@ -70,5 +82,7 @@ scope.
 
 ## Supported versions
 
-Security fixes are provided for the latest released Spectre Lab 0.1.x version
-while it remains compatible with Spectre 0.3.3 and Spectre Ledger 0.1.x.
+The Spectre 0.4 branch targets core `~> 0.4.0` and Spectre Ledger 0.1.x.
+Lab's independent package version remains 0.1.0; a core compatibility target is
+not a claim that a new Lab package has been published. Security fixes for the
+released 0.1.x line retain its documented dependency compatibility.

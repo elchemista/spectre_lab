@@ -7,11 +7,14 @@
 | Input | Behaviour |
 | --- | --- |
 | `{:inspect, :checkpoint}` | Fetch current Server checkpoint through its trusted runtime reference inside the worker |
+| `{:inspect, :checkpoint, :summary}` | Explicit spelling for the unchanged summary |
+| `{:inspect, :checkpoint, :operational}` | Core-versioned redacted operational projection of that same checkpoint |
+| `{:inspect, :interaction, interaction_id}` | Partial trace of retained facts for an interaction in that same checkpoint |
 | `{:inspect, encoded_binary}` | Inspect explicit offline canonical input within the 1 MiB helper budget |
 
-The result is `{:ok, %{codec_valid: true, version: integer, sequence: integer,
+The summary result is `{:ok, %{codec_valid: true, version: integer, sequence: integer,
 pending: count, inbox: count, outbox: count, fingerprint_present: boolean}}`.
-The worker exposes counts only; payloads, history, raw checkpoint bytes and
+The summary exposes counts only; payloads, history, raw checkpoint bytes and
 fingerprint contents are not returned. It validates scalar summary fields as well
 as the canonical representation. A missing Store returns
 `:server_checkpoint_required`; an absent snapshot returns `:checkpoint_not_found`;
@@ -21,6 +24,48 @@ The logical form receives its Store/module/key from the actual Server checkpoint
 configuration. Input cannot select another conversation, supply a live handle,
 or override that reference through service options. There is no `bind:` or
 execution operation: Lab's helper is cognitive inspection, not a replay executor.
+
+## Operational and trace projections
+
+Operational inspection delegates projection to `Spectre.Server.Diagnostics`.
+The core owns the schema and redaction contract; Lab does not couple its public
+output to arbitrary internal checkpoint fields. This is checkpoint state, not
+a guarantee that the running Server still has exactly that state. The projection
+identifies its source, revision/sequence where available and bounded retained
+metadata. Multiple active commands and pending intentions may coexist.
+
+The interaction helper correlates retained checkpoint entries by interaction and
+command identity. It declares partial coverage and missing history rather than
+inferring routing decisions or completed events that were not retained. Unknown
+information is distinct from a count of zero. A checkpoint trace is not a complete
+GAM authority history and does not reconstruct the model's reasoning.
+
+Both forms use the calling runtime's framework-supplied `checkpoint_ref`.
+There is no input for another Server PID, Store/key, mount or privilege level.
+Installed Skills share their Agent's GAM Domain but that alone grants no right to
+inspect one another. The core projection uses bounded allowlisted metadata; Lab
+never copies assigns, user text, prompts, action arguments or raw failure details
+into the result. The existing descriptor's 1 MiB result boundary still applies.
+
+### Authorized developer-facing inspection
+
+```elixir
+# Run from the authenticated consumer; options are validated by the Server.
+Spectre.Lab.inspect(agent, :operational, limit: 50)
+Spectre.Lab.trace(agent, interaction_id, limit: 50)
+```
+
+`inspect/3` delegates to `Spectre.Server.inspect/2`; `trace/3` delegates to
+`Spectre.Server.trace/3`. No proxy process replaces the actual caller. The Server
+checks access before reading state or GAM data, and mode/options cannot confer
+authority. Unsupported inspection modes return `{:error, :invalid_lab_inspection_mode}`.
+The default limit and maximum are 50 and 100 in the core diagnostic contract.
+Direct trace results can correlate the authorized GAM projection with retained
+runtime records, while keeping their provenance and coverage explicit.
+
+Lab adds no journal, event owner, polling loop or executor. Runtime/checkpoint
+metadata remains the core's responsibility, persistence remains the Store's,
+and GAM facts remain the kernel's authority record.
 
 ## Resource lifecycle
 
@@ -90,11 +135,13 @@ need governance; read-oriented operations are not categorically exempt from thos
 application boundaries. Ordinary configured cognition is not automatically a new
 end-user authorization ceremony.
 
-The host supplies a real GAM scope, Candidate factories, mandates/evidence,
-Presentations or interpretation when needed, and admitted executors. `bind:` names
-that host operation only. Native package calls outside the Server do not acquire
-these guarantees automatically. Do not call an effect executor directly from a
-flow callback and describe that call as governed.
+AgentServer automatically provisions its GAM Scope and constructs Candidates,
+Presentations, ingress and admitted execution from trusted identity and operation
+configuration. The application supplies business restrictions and registered
+adapters. `bind:` names that allowed operation only; it does not grant authority.
+Native package calls outside the Server do not acquire these guarantees
+automatically. Do not call an effect executor directly from a flow callback and
+describe that call as governed.
 
 ## Recovery and errors
 
@@ -113,3 +160,34 @@ migration. Contract drift is handled by the core recovery rules rather than
 invoking new adapter code with old arguments. See the
 [core lifecycle](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/STACK_TOOLS.md)
 and [AgentServer guide](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/AGENT_SERVER.md).
+
+## Mounted Skill runtimes
+
+Use the Stack-generated `lab` helper in a Skill's ordinary
+`Spectre.Server` callbacks. The Agent mounts `Spectre.Skill, server: ...`; each
+mount then owns its GenServer, state, workers, streams, pending intentions and
+checkpoint key. No package-specific Skill adapter or extra installation is needed.
+
+```text
+AgentServer ─────┐
+Research Skill ──┼──→ one automatic GAM boundary → same Domain / authority ledger
+Knowledge Skill ┘
+```
+
+The root creates this connection once and passes it to the children. Do not
+bootstrap another Domain, copy the ledger, implement a Skill Host or extend
+ingress manually. Mounting grants no authority. Governed effects must satisfy
+both root `gam:` operations and the mount's `governed:` references; scoped
+Kinetic references keep their complete mounted scope. Ledger/Lab inspect the
+calling runtime's checkpoint, not a copy of the shared GAM history.
+
+The shared kernel orders admission while workers can run concurrently. Every
+proposal retains its Skill invocation provenance. A confirmation belongs to the
+originating mount and exact presentation, so it cannot approve a different
+Skill's pending request. Timer expiry and closure enter the same lifecycle
+ledger without erasing Acts, uncertain Outcomes or Duties. No per-Skill GAM
+configuration is required.
+
+See the [core shared/local ownership table and confirmation example](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/SKILLS.md),
+[automatic GAM contract](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/MANAGED_GAM.md)
+and [LiveView showcase](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/DEMO.md).
