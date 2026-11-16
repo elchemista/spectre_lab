@@ -3,12 +3,12 @@ defmodule SpectreLab.SourceReleaseContractTest do
 
   @root Path.expand("..", __DIR__)
   @version "0.1.0"
-  @spectre_requirement "~> 0.3.3"
-  @ledger_repository "elchemista/spectre_ledger"
+  @spectre_requirement "~> 0.4.0"
+  @ledger_requirement "~> 0.1.0"
   @documentation_files ["README.md", "CHANGELOG.md", "SECURITY.md"] ++
                          Path.wildcard("docs/*.md", match_dot: true)
 
-  test "Mix metadata describes the GitHub-only 0.1.0 source release" do
+  test "Mix metadata describes the 0.1.0 source release" do
     config = Mix.Project.config()
     package = Keyword.fetch!(config, :package)
 
@@ -23,9 +23,11 @@ defmodule SpectreLab.SourceReleaseContractTest do
     assert package[:licenses] == ["Apache-2.0"]
 
     assert package[:links] == %{
-             "Documentation" => "https://github.com/elchemista/spectre_lab/blob/main/README.md",
+             "Documentation" =>
+               "https://github.com/elchemista/spectre_lab/blob/feature/diagnostics-0.4/README.md",
              "GitHub" => "https://github.com/elchemista/spectre_lab",
-             "Changelog" => "https://github.com/elchemista/spectre_lab/blob/main/CHANGELOG.md"
+             "Changelog" =>
+               "https://github.com/elchemista/spectre_lab/blob/feature/diagnostics-0.4/CHANGELOG.md"
            }
 
     assert {:ex_doc, "~> 0.40.3", ex_doc_opts} =
@@ -61,14 +63,13 @@ defmodule SpectreLab.SourceReleaseContractTest do
   test "dependency sources are explicit and local paths remain opt-in" do
     source = File.read!(Path.join(@root, "mix.exs"))
     assert source =~ @spectre_requirement
-    assert source =~ @ledger_repository
-    assert source =~ "404858a4e1e91716a13219e87bf5308f3efd2395"
+    assert source =~ @ledger_requirement
 
-    assert_dependency(:spectre, @spectre_requirement, nil)
-    assert_dependency(:spectre_ledger, nil, @ledger_repository)
+    assert_dependency(:spectre, @spectre_requirement)
+    assert_dependency(:spectre_ledger, @ledger_requirement)
   end
 
-  defp assert_dependency(name, requirement, repository) do
+  defp assert_dependency(name, requirement) do
     case Enum.find(Mix.Project.config()[:deps], &(elem(&1, 0) == name)) do
       {^name, ^requirement} ->
         :ok
@@ -76,12 +77,7 @@ defmodule SpectreLab.SourceReleaseContractTest do
       {^name, opts} when is_list(opts) ->
         assert opts[:override] == true
 
-        if path = opts[:path] do
-          assert File.dir?(path)
-        else
-          assert opts[:github] == repository
-          assert opts[:ref] == "404858a4e1e91716a13219e87bf5308f3efd2395"
-        end
+        assert File.dir?(opts[:path])
 
       dependency ->
         flunk("unexpected #{name} dependency: #{inspect(dependency)}")

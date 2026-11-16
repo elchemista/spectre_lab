@@ -1,5 +1,9 @@
 # Testing with Spectre Lab
 
+[Current README](../README.md) · [AgentServer 0.4](SPECTRE_0_4.md) · [Migration](MIGRATING_TO_0_4.md)
+
+Bundle, receipt playback and harness contracts below are retained Instance/offline APIs. AgentServer inspection has a distinct canonical format and trusted current-checkpoint reference.
+
 Lab separates three test concerns: verified persisted-checkpoint fixtures,
 caller-owned process isolation, and fault injection at an existing public
 boundary.
@@ -118,8 +122,8 @@ part of Lab 0.1.0.
 
 ## Project gates
 
-The release suite can run against adjacent Spectre and Ledger 0.3.3 / 0.1.x
-checkouts only through explicit path overrides:
+The development suite uses matching Spectre 0.4 and Ledger feature-branch
+checkouts through explicit path overrides:
 
 ```console
 SPECTRE_PATH=../spectre SPECTRE_LEDGER_PATH=../spectre_ledger mix deps.get
@@ -127,7 +131,9 @@ SPECTRE_PATH=../spectre SPECTRE_LEDGER_PATH=../spectre_ledger mix test
 ```
 
 Without those variables, even when sibling directories exist, Mix keeps the
-declared Spectre `~> 0.3.3` Hex source and Ledger 0.1.0 GitHub source.
+declared Spectre `~> 0.4.0` and Ledger `~> 0.1.0` requirements. Those
+requirements do not claim that these versions are published; use the matching overrides
+above or the README Git dependencies while developing this branch.
 
 Lab tests and bundle consumers require no PostgreSQL service, Ecto Repo, Ecto
 SQL, or Postgrex dependency.
@@ -141,9 +147,8 @@ mix test --cover
 mix credo --all
 mix docs --warnings-as-errors
 mix dialyzer
-mix hex.audit
 ```
 
-Lab remains a GitHub-only `0.1.0` package while Ledger is GitHub-only, so its
-CI deliberately validates the source release instead of pretending that its
-Git dependency can be published to Hex.
+CI checks out the matching core and Ledger branches and selects them through the
+same explicit overrides. The normal manifest has no required Git dependency;
+package publication remains a separate owner operation, in dependency order.

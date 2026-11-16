@@ -39,25 +39,11 @@ defmodule SpectreLab.MixProject do
   end
 
   defp spectre_dep do
-    dependency(:spectre, "SPECTRE_PATH", "~> 0.3.3")
+    dependency(:spectre, "SPECTRE_PATH", "~> 0.4.0")
   end
 
   defp ledger_dep do
-    case System.get_env("SPECTRE_LEDGER_PATH") do
-      path when is_binary(path) and path != "" ->
-        {:spectre_ledger, [path: Path.expand(path, __DIR__), override: true]}
-
-      _unset ->
-        # Ledger 0.1.0 is intentionally GitHub-only until its owner publishes
-        # it. Keeping this source explicit makes a clean Lab checkout usable
-        # without pretending that a Hex package already exists.
-        {:spectre_ledger,
-         [
-           github: "elchemista/spectre_ledger",
-           ref: "404858a4e1e91716a13219e87bf5308f3efd2395",
-           override: true
-         ]}
-    end
+    dependency(:spectre_ledger, "SPECTRE_LEDGER_PATH", "~> 0.1.0")
   end
 
   defp dependency(name, env, requirement) do
@@ -77,19 +63,23 @@ defmodule SpectreLab.MixProject do
       files: ~w(lib priv docs mix.exs .formatter.exs README.md CHANGELOG.md SECURITY.md LICENSE),
       licenses: ["Apache-2.0"],
       links: %{
-        "Documentation" => "#{@source_url}/blob/main/README.md",
+        "Documentation" => "#{@source_url}/blob/feature/diagnostics-0.4/README.md",
         "GitHub" => @source_url,
-        "Changelog" => "#{@source_url}/blob/main/CHANGELOG.md"
+        "Changelog" => "#{@source_url}/blob/feature/diagnostics-0.4/CHANGELOG.md"
       }
     ]
   end
 
   defp docs do
     [
+      assets: %{"docs/assets" => "docs/assets"},
       main: "readme",
-      source_ref: @version,
+      source_ref: "feature/diagnostics-0.4",
       extras: [
         "README.md",
+        "docs/SPECTRE_0_4.md",
+        "docs/MIGRATING_TO_0_4.md",
+        "docs/ARCHIVE_PLAYBACK.md",
         "CHANGELOG.md",
         "SECURITY.md",
         "docs/ARCHITECTURE.md",

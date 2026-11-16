@@ -1,6 +1,28 @@
 # Changelog
 
-All notable changes to Spectre Lab are documented here.
+## Unreleased — Spectre 0.4
+
+### Added
+
+- Current AgentServer checkpoint inspection through the trusted logical checkpoint
+  reference, without copying its bytes into helper results.
+- Summary, redacted operational and retained-interaction projections using the
+  core diagnostic contract; unavailable historical information stays explicit.
+- `Spectre.Lab.inspect/3` and `trace/3` delegate authorized live inspection in the
+  original caller process, preserving the Server's access checks.
+
+### Changed
+
+- Require Spectre `~> 0.4.0` and Ledger `~> 0.1.0`, with explicit Git/path sources
+  for compatible development checkouts. Lab keeps its independent package version.
+- Document AgentServer inspection separately from offline archive playback.
+
+### Compatibility
+
+- Preserve the existing summary result and each Skill's own-checkpoint boundary.
+- Instance Bundle v1, receipt playback, test sandboxes and fault adapters retain
+  their separate contracts. Inspection does not execute or restore saved work.
+- PostgreSQL and Ecto remain optional Ledger concerns; Lab requires no database.
 
 ## 0.1.0
 
