@@ -3,11 +3,7 @@ defmodule SpectreLab.DependencySelectionContractTest do
 
   @root Path.expand("..", __DIR__)
   @spectre_requirement "~> 0.4.0"
-  @ledger_source [
-    github: "elchemista/spectre_ledger",
-    ref: "404858a4e1e91716a13219e87bf5308f3efd2395",
-    override: true
-  ]
+  @ledger_requirement "~> 0.1.0"
 
   setup do
     workspace =
@@ -37,7 +33,7 @@ defmodule SpectreLab.DependencySelectionContractTest do
     deps = project_dependencies(context, [])
 
     assert dependency(deps, :spectre) == {:spectre, @spectre_requirement}
-    assert dependency(deps, :spectre_ledger) == {:spectre_ledger, @ledger_source}
+    assert dependency(deps, :spectre_ledger) == {:spectre_ledger, @ledger_requirement}
   end
 
   test "explicit environment variables select local path overrides", context do

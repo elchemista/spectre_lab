@@ -1,0 +1,6 @@
+flowchart TD
+  consumer["Configured consumer"] -->|inspect / trace| access["Server verifies caller"]
+  access --> live["Live redacted diagnostics"]
+  callback["Server callback"] -->|lab helper| worker["Lab worker"]
+  worker --> saved["Own persisted checkpoint"]
+  saved --> summary["Checkpoint summary or trace"]

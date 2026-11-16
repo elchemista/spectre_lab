@@ -10,6 +10,21 @@ playback, comparison, reports and isolated harnesses. Those archive formats are
 separate from AgentServer canonical snapshots; neither feature reconstructs
 execution that was never recorded.
 
+## Choose the source you want to inspect
+
+The `lab` callback helper reads the calling Server's persisted checkpoint through
+its trusted runtime reference. The native `inspect/3` and `trace/3` facades query
+the live Server and preserve the consumer's caller identity. Both return bounded
+metadata; their source and retained-history coverage remain explicit.
+
+![Spectre Lab: Choose the source you want to inspect](docs/assets/readme-architecture.svg)
+
+[Diagram source](docs/assets/readme-architecture.mmd).
+
+Use the helper when a flow needs checkpoint metadata. Use the authorized native
+facades for application diagnostics; a saved checkpoint can lag the live process.
+Offline archive playback is a third, separate API described below.
+
 ## Installation on the 0.4 development branch
 
 This branch targets the **unreleased Spectre 0.4 architecture**. Use matching Git
@@ -106,8 +121,9 @@ an absent retained event does not mean it never occurred.
 The authorized application consumer can inspect the live Server separately:
 
 ```elixir
-Spectre.Lab.inspect(agent, :operational, limit: 50)
-Spectre.Lab.trace(agent, interaction_id, limit: 50)
+# Call from the same process configured as the Server's consumer.
+{:ok, diagnostics} = Spectre.Lab.inspect(server, :operational, limit: 50)
+{:ok, trace} = Spectre.Lab.trace(server, interaction_id, limit: 50)
 ```
 
 These calls delegate directly to the core's authenticated APIs in the caller's
@@ -141,24 +157,31 @@ inspection helper for offline input, with its 1 MiB request budget.
 
 ## Use inside a reusable Skill
 
-The `lab` helper is generated in a Skill callback module with
-`use Spectre.Server, tools: MyApp.AI`, using the same installed Stack. A
-`Spectre.Skill` with `server:` has a separate GenServer, local assigns, workers,
-streams, pending intentions and checkpoint key.
+The generated `lab` helper also works in Skill Server callbacks using the same
+Stack. Each mount has its own process, state and checkpoint; governed operations
+share the root AgentServer's GAM Domain and must satisfy both root operations
+and mount `governed:` permissions. Ledger and Lab helpers inspect only the calling Server checkpoint. See the
+[core Skill guide](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/SKILLS.md) for ownership and consent.
 
-**It uses the root AgentServer's same automatic GAM integration, Domain and
-authority ledger.** Configure `gam:` once on the root. Mounting a Skill creates
-no new Domain or grant and needs no additional Host or consent ingress. Shared
-Stack resources stay in their existing supervised runtime.
+## Contributing
 
-Agent and Skill workers can run concurrently; the shared kernel orders admission.
-A governed effect must be enabled in root `operations` and permitted by the
-mount's `governed:` references. Each Skill proposal records its mount and
-invocation provenance. Consent identifies the originating Skill and exact
-presentation: approving an email cannot approve another Skill's memory write.
-Timer closure is recorded in the same Domain and does not erase a Duty.
-Ordinary cognitive operations retain their configured provider boundary.
+Use Elixir 1.19 and OTP 28 with matching core and Ledger checkouts:
 
-See the [core Skill ownership and consent guide](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/SKILLS.md),
-[automatic GAM responsibilities](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/MANAGED_GAM.md)
-and [two-Skill LiveView showcase](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/DEMO.md).
+```sh
+export SPECTRE_PATH=../spectre
+export SPECTRE_LEDGER_PATH=../spectre_ledger
+mix deps.get
+mix test
+mix credo
+mix dialyzer
+mix docs --warnings-as-errors
+```
+
+The suite needs no PostgreSQL service. See the [testing guide](docs/TESTING.md)
+for isolated test processes, stream fixtures and storage fault injection.
+
+## Examples
+
+The [LiveView playground](https://github.com/elchemista/demo_spectre) demonstrates
+Spectre and its packages. [spectre.guide](https://spectre.guide) explains GAM and
+provides usage articles. Package versions are independent of Spectre core.

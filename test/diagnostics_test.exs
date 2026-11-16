@@ -20,16 +20,16 @@ defmodule Spectre.Lab.DiagnosticsTest do
   setup %{tmp_dir: dir} do
     store = start_supervised!({Spectre.Ledger.ServerStore, path: Path.join(dir, "agent.ledger")})
 
-    {:ok, server} =
-      Spectre.Server.start_link(
-        agent: Agent,
-        consumer: self(),
-        identity: %{conversation: "diagnostic-fixture"},
-        gam: [storage: {:disk, Path.join(dir, "gam")}],
-        checkpoint: {Spectre.Ledger.ServerStore, store, :agent}
+    server =
+      start_supervised!(
+        {Spectre.Server,
+         agent: Agent,
+         consumer: self(),
+         identity: %{conversation: "diagnostic-fixture"},
+         gam: [storage: {:disk, Path.join(dir, "gam")}],
+         checkpoint: {Spectre.Ledger.ServerStore, store, :agent}}
       )
 
-    on_exit(fn -> if Process.alive?(server), do: GenServer.stop(server) end)
     %{server: server}
   end
 

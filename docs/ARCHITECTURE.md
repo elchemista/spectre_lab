@@ -117,7 +117,7 @@ lookup and content-addressed payload reconciliation paths to run unchanged.
 Lab targets Spectre `~> 0.4.0`, Spectre Ledger `~> 0.1.0`, and Jason. Ecto
 SQL and Postgrex are neither direct nor required transitive dependencies. Lab
 does not select Ledger's optional PostgreSQL backend or supervise an Ecto Repo.
-The default manifests retain a Spectre Hex requirement and pinned Ledger Git
-source; these are not a claim that core 0.4 is published. Use the README matching
+The default manifest declares version requirements for core and Ledger; these
+are not a claim that either candidate is published. Use the README matching
 Git overrides for this unreleased integration. Local contributors explicitly set
 `SPECTRE_PATH` and `SPECTRE_LEDGER_PATH` to their matching checkouts.

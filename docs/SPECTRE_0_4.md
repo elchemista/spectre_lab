@@ -51,8 +51,8 @@ into the result. The existing descriptor's 1 MiB result boundary still applies.
 
 ```elixir
 # Run from the authenticated consumer; options are validated by the Server.
-Spectre.Lab.inspect(agent, :operational, limit: 50)
-Spectre.Lab.trace(agent, interaction_id, limit: 50)
+Spectre.Lab.inspect(server, :operational, limit: 50)
+Spectre.Lab.trace(server, interaction_id, limit: 50)
 ```
 
 `inspect/3` delegates to `Spectre.Server.inspect/2`; `trace/3` delegates to
@@ -103,91 +103,19 @@ external effects. Foundation/Bundle module-loading boundaries remain documented
 in [Security](../SECURITY.md). Lab has no PostgreSQL runtime dependency and does
 not open a Repo simply to read an offline bundle.
 
-## Who owns the loop
-
-`Spectre.Stack` installs immutable capabilities and tool descriptors. The Agent
-selects that Stack and declares routing; `Spectre.Server` owns the GenServer,
-conversation, pending continuations and asynchronous results. Use
-`use Spectre.Server, tools: MyApp.AI` to generate private helpers. A helper returns
-an updated context containing a command; return that context from the callback.
-It does not synchronously return the package's result. Tuple input chooses the
-operation, and `on_result:` identifies the continuation in `handle_result/3`.
-
-Preparation validates ordinary input before dispatch. The Server records command
-identity/outbox state, invokes a worker, projects a bounded portable result and
-acquires that result before the callback. Durable recovery needs a configured
-checkpoint Store. Keep live clients and process handles in supervised resources
-or process-local private context, not durable assigns. Native OTP callbacks remain
-available; they use the same command-return boundary.
-
-## Where GAM intervenes
-
-The [Governed Act Model](https://spectre.guide/en/governed-act-model) separates
-authority (Mandate), supporting facts (Evidence), the admitted execution record
-(Act), and unresolved obligations (Duty). Installing a package connects a
-capability; it does not grant authority to act on behalf of the end user.
-
-A cognitive descriptor uses the tool worker path, without treating every model
-call or classifier as a consent request. A governed descriptor becomes `propose`
-before dispatch and uses the standard `Spectre.Server.GAM` bridge. Host-declared
-surfaces still determine which effects, protected disclosures or resource uses
-need governance; read-oriented operations are not categorically exempt from those
-application boundaries. Ordinary configured cognition is not automatically a new
-end-user authorization ceremony.
-
-AgentServer automatically provisions its GAM Scope and constructs Candidates,
-Presentations, ingress and admitted execution from trusted identity and operation
-configuration. The application supplies business restrictions and registered
-adapters. `bind:` names that allowed operation only; it does not grant authority.
-Native package calls outside the Server do not acquire these guarantees
-automatically. Do not call an effect executor directly from a flow callback and
-describe that call as governed.
-
-## Recovery and errors
-
-These packages' cognitive helper operations declare safe replay; the runtime can
-retry interrupted cognitive work according to the command lifecycle. A result is
-still scoped to its original command. Application input rejections arrive as
-`{:error, {:tool_rejected, tool, operation, reason}}`; library domain errors retain
-the package's tagged result. Invalid installation/configuration is a developer
-error, not a successful acquisition. The general `{:tool_unknown, details}` result
-belongs to nonrepeatable tool operations; it is not an instruction to retry effects.
-
-Governed effects use GAM recovery and their original command identities. An
-ambiguous outcome remains unresolved: it must not be reported as proof of failure
-or sent again blindly. A changed checkpoint fingerprint needs an explicit host
-migration. Contract drift is handled by the core recovery rules rather than
-invoking new adapter code with old arguments. See the
-[core lifecycle](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/STACK_TOOLS.md)
-and [AgentServer guide](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/AGENT_SERVER.md).
-
 ## Mounted Skill runtimes
 
-Use the Stack-generated `lab` helper in a Skill's ordinary
-`Spectre.Server` callbacks. The Agent mounts `Spectre.Skill, server: ...`; each
-mount then owns its GenServer, state, workers, streams, pending intentions and
-checkpoint key. No package-specific Skill adapter or extra installation is needed.
+Use `lab` in Skill Server callbacks with the same installed Stack. Each mount
+keeps its own state and checkpoint while sharing the root GAM Domain; mounting
+does not grant authority. Inspection uses the calling Server checkpoint and cannot select a sibling or root checkpoint. See the
+[core Skill ownership guide](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/SKILLS.md).
 
-```text
-AgentServer ─────┐
-Research Skill ──┼──→ one automatic GAM boundary → same Domain / authority ledger
-Knowledge Skill ┘
-```
+## Command lifecycle
 
-The root creates this connection once and passes it to the children. Do not
-bootstrap another Domain, copy the ledger, implement a Skill Host or extend
-ingress manually. Mounting grants no authority. Governed effects must satisfy
-both root `gam:` operations and the mount's `governed:` references; scoped
-Kinetic references keep their complete mounted scope. Ledger/Lab inspect the
-calling runtime's checkpoint, not a copy of the shared GAM history.
-
-The shared kernel orders admission while workers can run concurrently. Every
-proposal retains its Skill invocation provenance. A confirmation belongs to the
-originating mount and exact presentation, so it cannot approve a different
-Skill's pending request. Timer expiry and closure enter the same lifecycle
-ledger without erasing Acts, uncertain Outcomes or Duties. No per-Skill GAM
-configuration is required.
-
-See the [core shared/local ownership table and confirmation example](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/SKILLS.md),
-[automatic GAM contract](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/MANAGED_GAM.md)
-and [LiveView showcase](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/DEMO.md).
+Return the context containing the helper command and receive its tagged result
+in `handle_result/3`. Invalid input is reported as
+`{:error, {:tool_rejected, tool, operation, reason}}`. Recovery and acquired results
+remain scoped to the original command; native package calls outside the Server
+retain their own host boundary. See the
+[Server lifecycle](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/STACK_TOOLS.md) and
+[Managed GAM guide](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/MANAGED_GAM.md).

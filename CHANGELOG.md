@@ -1,26 +1,28 @@
 # Changelog
 
-## Core 0.4 diagnostic extension (unreleased)
-
-- Add explicit summary, redacted operational and retained-interaction checkpoint
-  inspection through the core's versioned diagnostic projection.
-- Add `Spectre.Lab.inspect/3` and `trace/3` for authorized developer callers,
-  preserving their process identity when delegating to the Server APIs.
-- Preserve the original checkpoint summary and own-Skill access boundary. Trace
-  coverage explicitly distinguishes retained facts from missing historical data.
-- Develop on `feature/diagnostics-0.4`; the core compatibility line and Lab's
-  independent package version remain distinct.
-
 ## Unreleased — Spectre 0.4
 
-- Rewrite the README around standalone use and Stack → Agent → Server integration; add lifecycle/GAM, migration and explicitly scoped retained-runtime guides to ExDoc.
+### Added
 
-- Inspect the current checkpoint through a trusted logical reference without copying its bytes into a tool result.
+- Current AgentServer checkpoint inspection through the trusted logical checkpoint
+  reference, without copying its bytes into helper results.
+- Summary, redacted operational and retained-interaction projections using the
+  core diagnostic contract; unavailable historical information stays explicit.
+- `Spectre.Lab.inspect/3` and `trace/3` delegate authorized live inspection in the
+  original caller process, preserving the Server's access checks.
 
-- Add bounded canonical AgentServer snapshot inspection without executing or trusting restored identity.
-- Require Spectre `~> 0.4.0`; retain legacy APIs where applicable.
+### Changed
 
-All notable changes to Spectre Lab are documented here.
+- Require Spectre `~> 0.4.0` and Ledger `~> 0.1.0`, with explicit Git/path sources
+  for compatible development checkouts. Lab keeps its independent package version.
+- Document AgentServer inspection separately from offline archive playback.
+
+### Compatibility
+
+- Preserve the existing summary result and each Skill's own-checkpoint boundary.
+- Instance Bundle v1, receipt playback, test sandboxes and fault adapters retain
+  their separate contracts. Inspection does not execute or restore saved work.
+- PostgreSQL and Ecto remain optional Ledger concerns; Lab requires no database.
 
 ## 0.1.0
 
