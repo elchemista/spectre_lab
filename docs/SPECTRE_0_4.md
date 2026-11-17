@@ -72,7 +72,7 @@ and GAM facts remain the kernel's authority record.
 Lab starts no owner, scheduler, persistence process or external service. Install
 Ledger as its declared package dependency, then configure the Server's checkpoint
 port using Ledger ServerStore or another supported Store. Both processes remain
-under the host's supervision. See [Ledger's 0.4 guide](https://github.com/elchemista/spectre_ledger/blob/feature/stack-tools-0.4/docs/SPECTRE_0_4.md).
+under the host's supervision. See [Ledger's 0.4 guide](https://github.com/elchemista/spectre_ledger/blob/0.1.0/docs/SPECTRE_0_4.md).
 
 If the host wants a periodic inspection, a normal Server callback can return the
 same helper command; there is no need for a second Lab event loop. The result
@@ -108,7 +108,7 @@ not open a Repo simply to read an offline bundle.
 Use `lab` in Skill Server callbacks with the same installed Stack. Each mount
 keeps its own state and checkpoint while sharing the root GAM Domain; mounting
 does not grant authority. Inspection uses the calling Server checkpoint and cannot select a sibling or root checkpoint. See the
-[core Skill ownership guide](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/SKILLS.md).
+[core Skill ownership guide](https://github.com/elchemista/spectre/blob/0.4.0/docs/SKILLS.md).
 
 ## Command lifecycle
 
@@ -117,5 +117,5 @@ in `handle_result/3`. Invalid input is reported as
 `{:error, {:tool_rejected, tool, operation, reason}}`. Recovery and acquired results
 remain scoped to the original command; native package calls outside the Server
 retain their own host boundary. See the
-[Server lifecycle](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/STACK_TOOLS.md) and
-[Managed GAM guide](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/MANAGED_GAM.md).
+[Server lifecycle](https://github.com/elchemista/spectre/blob/0.4.0/docs/STACK_TOOLS.md) and
+[Managed GAM guide](https://github.com/elchemista/spectre/blob/0.4.0/docs/MANAGED_GAM.md).

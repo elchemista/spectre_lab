@@ -10,6 +10,7 @@ defmodule SpectreLab.SourceReleaseContractTest do
 
   test "Mix metadata describes the 0.1.0 source release" do
     config = Mix.Project.config()
+    assert config[:docs][:source_ref] == config[:version]
     package = Keyword.fetch!(config, :package)
 
     assert config[:version] == @version
@@ -23,11 +24,10 @@ defmodule SpectreLab.SourceReleaseContractTest do
     assert package[:licenses] == ["Apache-2.0"]
 
     assert package[:links] == %{
-             "Documentation" =>
-               "https://github.com/elchemista/spectre_lab/blob/feature/diagnostics-0.4/README.md",
+             "Documentation" => "https://hexdocs.pm/spectre_lab/#{@version}",
              "GitHub" => "https://github.com/elchemista/spectre_lab",
              "Changelog" =>
-               "https://github.com/elchemista/spectre_lab/blob/feature/diagnostics-0.4/CHANGELOG.md"
+               "https://github.com/elchemista/spectre_lab/blob/#{@version}/CHANGELOG.md"
            }
 
     assert {:ex_doc, "~> 0.40.3", ex_doc_opts} =

@@ -63,9 +63,9 @@ defmodule SpectreLab.MixProject do
       files: ~w(lib priv docs mix.exs .formatter.exs README.md CHANGELOG.md SECURITY.md LICENSE),
       licenses: ["Apache-2.0"],
       links: %{
-        "Documentation" => "#{@source_url}/blob/feature/diagnostics-0.4/README.md",
+        "Documentation" => "https://hexdocs.pm/spectre_lab/#{@version}",
         "GitHub" => @source_url,
-        "Changelog" => "#{@source_url}/blob/feature/diagnostics-0.4/CHANGELOG.md"
+        "Changelog" => "#{@source_url}/blob/#{@version}/CHANGELOG.md"
       }
     ]
   end
@@ -74,7 +74,7 @@ defmodule SpectreLab.MixProject do
     [
       assets: %{"docs/assets" => "docs/assets"},
       main: "readme",
-      source_ref: "feature/diagnostics-0.4",
+      source_ref: @version,
       extras: [
         "README.md",
         "docs/SPECTRE_0_4.md",

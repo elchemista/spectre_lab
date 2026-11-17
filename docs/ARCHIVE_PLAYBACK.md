@@ -1,6 +1,6 @@
 # Spectre Lab — standalone and retained runtime reference
 
-For the retained core runtime APIs, see the [compatibility index](https://github.com/elchemista/spectre/blob/feature/agent-server-gam/docs/COMPATIBILITY.md).
+For the retained core runtime APIs, see the [compatibility index](https://github.com/elchemista/spectre/blob/0.4.0/docs/COMPATIBILITY.md).
 
 This guide covers retained offline Instance bundle and boundary-receipt playback, reports and isolated harnesses. Those formats are separate from AgentServer canonical snapshot inspection. Playback never manufactures missing execution history or replays external effects.
 
