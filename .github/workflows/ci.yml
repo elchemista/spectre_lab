@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: elchemista/spectre_ledger
-          ref: f024f8a5e6e8bff5a37522308aa0b1271e5e20cc
+          ref: bd9fd23643d3b38b8c404a5a508aad80d1d35b48
           path: _compat/spectre_ledger
           persist-credentials: false
 
@@ -74,7 +74,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: elchemista/spectre_ledger
-          ref: f024f8a5e6e8bff5a37522308aa0b1271e5e20cc
+          ref: bd9fd23643d3b38b8c404a5a508aad80d1d35b48
           path: _compat/spectre_ledger
           persist-credentials: false
 
