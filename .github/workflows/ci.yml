@@ -28,25 +28,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Check out compatible spectre
-        uses: actions/checkout@v6
-        with:
-          repository: elchemista/spectre
-          ref: affe0b6ee33c957bc9aff9eec70cf7e7c33e80d6
-          path: _compat/spectre
-          persist-credentials: false
-
       - name: Check out compatible spectre_ledger
         uses: actions/checkout@v6
         with:
           repository: elchemista/spectre_ledger
-          ref: 77cbe94a33ce29c678ec9c2f83fc42fa90b581e3
+          ref: f024f8a5e6e8bff5a37522308aa0b1271e5e20cc
           path: _compat/spectre_ledger
           persist-credentials: false
 
       - name: Select compatible dependency sources
         run: |
-          echo "SPECTRE_PATH=$GITHUB_WORKSPACE/_compat/spectre" >> "$GITHUB_ENV"
           echo "SPECTRE_LEDGER_PATH=$GITHUB_WORKSPACE/_compat/spectre_ledger" >> "$GITHUB_ENV"
 
       - name: Set up Elixir and Erlang/OTP
@@ -60,6 +51,9 @@ jobs:
 
       - name: Run tests
         run: mix test
+
+      - name: Verify published Spectre dependency
+        run: mix deps | grep -E '^\* spectre 0\.4\.[0-9]+ \(Hex package\)'
 
       - name: Run Credo (non-strict)
         run: mix credo
@@ -76,25 +70,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Check out compatible spectre
-        uses: actions/checkout@v6
-        with:
-          repository: elchemista/spectre
-          ref: affe0b6ee33c957bc9aff9eec70cf7e7c33e80d6
-          path: _compat/spectre
-          persist-credentials: false
-
       - name: Check out compatible spectre_ledger
         uses: actions/checkout@v6
         with:
           repository: elchemista/spectre_ledger
-          ref: 77cbe94a33ce29c678ec9c2f83fc42fa90b581e3
+          ref: f024f8a5e6e8bff5a37522308aa0b1271e5e20cc
           path: _compat/spectre_ledger
           persist-credentials: false
 
       - name: Select compatible dependency sources
         run: |
-          echo "SPECTRE_PATH=$GITHUB_WORKSPACE/_compat/spectre" >> "$GITHUB_ENV"
           echo "SPECTRE_LEDGER_PATH=$GITHUB_WORKSPACE/_compat/spectre_ledger" >> "$GITHUB_ENV"
 
       - name: Set up Elixir and Erlang/OTP
